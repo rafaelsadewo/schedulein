@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { format, addDays, eachDayOfInterval } from 'date-fns';
 import { id } from 'date-fns/locale';
 import Navbar from '@/components/Navbar';
+import { ToastContainer, useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase';
 import { getHoliday, isWorkingDay } from '@/lib/indonesian-holidays';
 import {
@@ -29,6 +30,7 @@ interface ScheduleItem {
 type Tab = 'daily' | 'recurring';
 
 export default function JadwalPage() {
+  const { toasts, showToast, removeToast } = useToast();
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -122,6 +124,7 @@ export default function JadwalPage() {
 
     if (error) {
       console.error(error);
+      showToast('Gagal menambah jadwal', 'error');
     } else {
       setTitle('');
       setStartTime('09:00');
@@ -129,6 +132,7 @@ export default function JadwalPage() {
       setNotes('');
       setShowForm(false);
       fetchSchedules();
+      showToast(`Jadwal "${title}" berhasil ditambahkan!`, 'success');
     }
   };
 
@@ -136,7 +140,7 @@ export default function JadwalPage() {
     e.preventDefault();
 
     if (selectedDaysOfWeek.length === 0) {
-      alert('Pilih minimal satu hari!');
+      showToast('Pilih minimal satu hari!', 'warning');
       return;
     }
 
@@ -158,9 +162,10 @@ export default function JadwalPage() {
     setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
     setRecurringNotes('');
     setShowRecurringForm(false);
+    showToast(`Recurring "${recurringTitle}" berhasil ditambahkan!`, 'success');
   };
 
-  const handleDeleteSchedule = async (id: string) => {
+  const handleDeleteSchedule = async (id: string, title: string) => {
     const { error } = await supabase
       .from('schedule_items')
       .delete()
@@ -168,13 +173,16 @@ export default function JadwalPage() {
 
     if (error) {
       console.error(error);
+      showToast('Gagal menghapus jadwal', 'error');
     } else {
       fetchSchedules();
+      showToast(`Jadwal "${title}" berhasil dihapus`, 'info');
     }
   };
 
-  const handleDeleteRecurring = (id: string) => {
+  const handleDeleteRecurring = (id: string, title: string) => {
     setRecurringSchedules(recurringSchedules.filter((r) => r.id !== id));
+    showToast(`Recurring "${title}" berhasil dihapus`, 'info');
   };
 
   const toggleDayOfWeek = (day: DayOfWeek) => {
@@ -190,6 +198,7 @@ export default function JadwalPage() {
   return (
     <div className="min-h-screen bg-brutal-bg-light text-brutal-fg-light">
       <Navbar />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
         <h1 className="text-5xl font-black mb-12 tracking-tighter">JADWAL</h1>
@@ -388,15 +397,15 @@ export default function JadwalPage() {
 
               <div>
                 <label className="block font-mono text-xs font-bold tracking-wider mb-2">PILIH HARI (BISA MULTIPLE)</label>
-                <div className="grid grid-cols-7 gap-2 border-2 border-brutal-fg-light p-3">
+                <div className="grid grid-cols-7 gap-2 border-2 border-brutal-fg-light p-3 mb-3">
                   {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                     <button
                       key={day}
                       type="button"
                       onClick={() => toggleDayOfWeek(day as DayOfWeek)}
-                      className={`p-3 font-bold text-xs border-2 ${
+                      className={`p-3 font-bold text-xs border-2 transition-all ${
                         selectedDaysOfWeek.includes(day as DayOfWeek)
-                          ? 'bg-brutal-accent text-brutal-fg-light border-brutal-accent'
+                          ? 'bg-brutal-accent text-brutal-fg-light border-brutal-accent ring-2 ring-brutal-accent ring-offset-2'
                           : 'bg-brutal-bg-light text-brutal-fg-light border-brutal-fg-light hover:border-brutal-accent'
                       }`}
                     >
@@ -404,8 +413,20 @@ export default function JadwalPage() {
                     </button>
                   ))}
                 </div>
-                <div className="font-mono text-xs text-brutal-fg-light mt-2">
-                  Dipilih: {selectedDaysOfWeek.length} hari
+
+                {/* Selected Days Display */}
+                <div className="border-2 border-brutal-fg-light p-3 bg-brutal-accent text-brutal-fg-light">
+                  <div className="font-mono text-xs font-bold tracking-wider mb-2">HARI TERPILIH:</div>
+                  {selectedDaysOfWeek.length === 0 ? (
+                    <div className="font-mono text-xs italic">Belum ada hari yang dipilih</div>
+                  ) : (
+                    <div className="font-mono text-sm font-bold">
+                      {selectedDaysOfWeek.map((day) => getDayNameId(day)).join(' • ')}
+                    </div>
+                  )}
+                  <div className="font-mono text-xs mt-2 opacity-80">
+                    Total: {selectedDaysOfWeek.length} hari per minggu
+                  </div>
                 </div>
               </div>
 
@@ -469,7 +490,7 @@ export default function JadwalPage() {
                     <button
                       onClick={() => {
                         if (confirm(`Hapus recurring schedule "${recurring.title}"?`)) {
-                          handleDeleteRecurring(recurring.id);
+                          handleDeleteRecurring(recurring.id, recurring.title);
                         }
                       }}
                       className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light whitespace-nowrap"
@@ -509,7 +530,7 @@ export default function JadwalPage() {
                     </div>
                     {!item.id.includes('recurring') && (
                       <button
-                        onClick={() => handleDeleteSchedule(item.id)}
+                        onClick={() => handleDeleteSchedule(item.id, item.title)}
                         className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light ml-4"
                       >
                         DEL

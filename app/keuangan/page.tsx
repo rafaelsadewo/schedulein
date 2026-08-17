@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import Navbar from '@/components/Navbar';
+import { ToastContainer, useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase';
 import { exportToCSV, generateMonthlyReport, autoExportMonthly } from '@/lib/export';
 
@@ -30,6 +31,7 @@ const EXPENSE_CATEGORIES = [
 const INCOME_CATEGORIES = ['Gaji', 'Freelance', 'Investasi', 'Lain-lain'];
 
 export default function KeuanganPage() {
+  const { toasts, showToast, removeToast } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [type, setType] = useState<TransactionType>('expense');
@@ -79,6 +81,7 @@ export default function KeuanganPage() {
 
     if (error) {
       console.error(error);
+      showToast('Gagal menambah transaksi', 'error');
     } else {
       setType('expense');
       setCategory('Makan');
@@ -87,10 +90,11 @@ export default function KeuanganPage() {
       setDate(format(new Date(), 'yyyy-MM-dd'));
       setShowForm(false);
       fetchTransactions();
+      showToast(`Transaksi berhasil ditambahkan!`, 'success');
     }
   };
 
-  const handleDeleteTransaction = async (id: string) => {
+  const handleDeleteTransaction = async (id: string, description: string) => {
     const { error } = await supabase
       .from('transactions')
       .delete()
@@ -98,8 +102,10 @@ export default function KeuanganPage() {
 
     if (error) {
       console.error(error);
+      showToast('Gagal menghapus transaksi', 'error');
     } else {
       fetchTransactions();
+      showToast(`"${description}" berhasil dihapus`, 'info');
     }
   };
 
@@ -127,6 +133,7 @@ export default function KeuanganPage() {
   return (
     <div className="min-h-screen bg-brutal-bg-light text-brutal-fg-light">
       <Navbar />
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
         <h1 className="text-5xl font-black mb-12 tracking-tighter">KEUANGAN BULANAN</h1>
@@ -207,6 +214,7 @@ export default function KeuanganPage() {
                   transactions,
                   `laporan-keuangan-${currentYear}-${String(currentMonth).padStart(2, '0')}.csv`
                 );
+                showToast('File CSV berhasil diunduh!', 'success');
               }}
               className="bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
             >
@@ -225,6 +233,7 @@ export default function KeuanganPage() {
                 link.href = URL.createObjectURL(blob);
                 link.download = `laporan-bulanan-${new Date().toISOString().split('T')[0]}.txt`;
                 link.click();
+                showToast('File laporan berhasil diunduh!', 'success');
               }}
               className="bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
             >
@@ -239,7 +248,12 @@ export default function KeuanganPage() {
                   const filtered = transactions.filter(
                     (t) => t.date >= start && t.date <= end
                   );
-                  exportToCSV(filtered, `transaksi-${start}-to-${end}.csv`);
+                  if (filtered.length === 0) {
+                    showToast('Tidak ada transaksi dalam range tanggal tersebut', 'warning');
+                  } else {
+                    exportToCSV(filtered, `transaksi-${start}-to-${end}.csv`);
+                    showToast(`${filtered.length} transaksi berhasil diunduh!`, 'success');
+                  }
                 }
               }}
               className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
@@ -380,7 +394,7 @@ export default function KeuanganPage() {
                         {item.type === 'income' ? '+' : '-'} Rp {item.amount.toLocaleString('id-ID')}
                       </div>
                       <button
-                        onClick={() => handleDeleteTransaction(item.id)}
+                        onClick={() => handleDeleteTransaction(item.id, item.description || item.category)}
                         className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light mt-2"
                       >
                         DEL

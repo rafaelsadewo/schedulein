@@ -24,12 +24,15 @@ export default function Navbar() {
           [ SCHEDULEIN ]
         </h1>
 
-        <div className="flex gap-8 items-center">
+        <div className="flex gap-4 items-center">
           <Link href="/jadwal" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
             JADWAL
           </Link>
           <Link href="/keuangan" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
             KEUANGAN
+          </Link>
+          <Link href="/settings" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
+            ⚙️
           </Link>
           <button
             onClick={handleLogout}
