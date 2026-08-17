@@ -8,11 +8,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        pastel: {
-          green: '#C8E6C9',
-          'green-dark': '#A5D6A7',
-          'green-light': '#E8F5E9',
+        brutal: {
+          'bg-light': '#F4F4F0',
+          'bg-dark': '#0A0A0A',
+          'fg-light': '#050505',
+          'fg-dark': '#EAEAEA',
+          'accent': '#B5C99A',
+          'red': '#E61919',
         },
+      },
+      fontFamily: {
+        'mono': ['JetBrains Mono', 'IBM Plex Mono', 'monospace'],
+        'sans': ['Inter', 'sans-serif'],
+      },
+      letterSpacing: {
+        'tighter': '-0.03em',
       },
     },
   },

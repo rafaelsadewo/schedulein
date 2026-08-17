@@ -74,6 +74,37 @@ CREATE INDEX idx_transaction_user_date ON transactions(user_id, date);
 
 3. Klik **"Run"**.
 
+### Tabel `recurring_schedules` (NEW)
+
+1. Klik **"New Query"** lagi.
+2. Copy-paste query ini:
+
+```sql
+CREATE TABLE recurring_schedules (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  start_time time NOT NULL,
+  end_time time NOT NULL,
+  recurrence_type text NOT NULL CHECK (recurrence_type IN ('daily', 'weekly', 'monthly')),
+  days_of_week int[] DEFAULT NULL,
+  end_date date DEFAULT NULL,
+  notes text,
+  created_at timestamp DEFAULT NOW()
+);
+
+ALTER TABLE recurring_schedules ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can only see their own recurring schedules"
+  ON recurring_schedules FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_recurring_user ON recurring_schedules(user_id);
+```
+
+3. Klik **"Run"**.
+
 ## 3. Setup Environment Variables
 
 1. Di Supabase dashboard, klik **"Settings"** → **"API"**.
@@ -110,8 +141,33 @@ Setelah selesai, Vercel akan kasih URL public buat web lo. Bisa diakses dari man
 
 ## Fitur Tersedia
 
-- **Jadwal Harian** (`/jadwal`): Tambah/edit/hapus jadwal per hari, bisa navigate ke besok atau kemarin.
-- **Keuangan** (`/keuangan`): Catat pemasukan/pengeluaran, lihat ringkasan per kategori, dan dapet saran hemat otomatis.
+### 📅 Jadwal (Schedule)
+- **Daily Schedules**: Catat jadwal per hari dari pagi sampai malam
+- **Recurring Schedules**: Jadwal tetap (kerja 9-5, mata kuliah per minggu, dll)
+- **Indonesian Calendar**: Otomatis detect hari libur nasional Indonesia
+- **Browser Notifications**: Notif 30 menit sebelum jadwal dimulai
+
+### 💰 Keuangan (Finance)
+- **Income & Expense Tracking**: Catat pemasukan & pengeluaran dengan kategori
+- **Monthly Analysis**: Breakdown pengeluaran per kategori + saran hemat
+- **Export Features**: 
+  - Export CSV (transaksi bulanan)
+  - Export Report (TXT dengan summary)
+  - Export Custom Range (pilih tanggal)
+
+### 🔄 Recurring Schedules
+1. Buka tab "Recurring" di halaman Jadwal
+2. Klik "Add Recurring"
+3. Isi: Title, waktu, pattern (Daily/Weekly/Monthly), hari (jika weekly)
+4. Save → jadwal otomatis tercipta setiap harinya
+
+**Contoh:**
+- Kerja: Senin-Jumat, 9:00-17:00
+- Kuliah Math: Senin 9:00-12:00
+- Kuliah Fisika: Rabu 10:00-13:00
+
+### 🎌 Indonesian Holidays
+Sistem otomatis mendeteksi hari libur nasional (Tahun Baru, Isra Mi'raj, Idul Fitri, Idul Adha, Hari Kemerdekaan, Natal, dll). Ketika buka jadwal di hari libur, akan muncul notifikasi hari libur.
 
 ## Troubleshooting
 

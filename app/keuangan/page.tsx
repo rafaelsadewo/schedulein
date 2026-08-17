@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import Navbar from '@/components/Navbar';
 import { createClient } from '@/lib/supabase';
+import { exportToCSV, generateMonthlyReport, autoExportMonthly } from '@/lib/export';
 
 type TransactionType = 'income' | 'expense';
 
@@ -124,104 +125,166 @@ export default function KeuanganPage() {
   const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   return (
-    <div>
+    <div className="min-h-screen bg-brutal-bg-light text-brutal-fg-light">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-pastel-green-dark">Keuangan Bulanan</h1>
+      <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
+        <h1 className="text-5xl font-black mb-12 tracking-tighter">KEUANGAN BULANAN</h1>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-green-100 p-6 rounded-lg shadow-md">
-            <p className="text-sm text-gray-700 mb-2">Total Pemasukan</p>
-            <p className="text-2xl font-bold text-green-700">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mb-12 border-2 border-brutal-fg-light">
+          <div className="border-r-2 border-b-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-2">INCOME</div>
+            <div className="text-3xl font-black tracking-tighter text-brutal-accent">
               Rp {totalIncome.toLocaleString('id-ID')}
-            </p>
+            </div>
           </div>
 
-          <div className="bg-red-100 p-6 rounded-lg shadow-md">
-            <p className="text-sm text-gray-700 mb-2">Total Pengeluaran</p>
-            <p className="text-2xl font-bold text-red-700">
+          <div className="border-r-2 border-b-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-2">EXPENSE</div>
+            <div className="text-3xl font-black tracking-tighter text-brutal-red">
               Rp {totalExpense.toLocaleString('id-ID')}
-            </p>
+            </div>
           </div>
 
-          <div className="bg-blue-100 p-6 rounded-lg shadow-md">
-            <p className="text-sm text-gray-700 mb-2">Sisa</p>
-            <p className={`text-2xl font-bold ${totalIncome - totalExpense >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
+          <div className="border-b-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-2">BALANCE</div>
+            <div className={`text-3xl font-black tracking-tighter ${
+              totalIncome - totalExpense >= 0 ? 'text-brutal-accent' : 'text-brutal-red'
+            }`}>
               Rp {(totalIncome - totalExpense).toLocaleString('id-ID')}
-            </p>
+            </div>
           </div>
         </div>
 
         {/* Category Breakdown */}
         {expenseByCategory.length > 0 && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-xl font-bold mb-4 text-pastel-green-dark">Pengeluaran Per Kategori</h2>
-            <div className="space-y-3">
-              {expenseByCategory.map((cat) => (
-                <div key={cat.name}>
-                  <div className="flex justify-between mb-1">
-                    <span className="font-medium">{cat.name}</span>
-                    <span>Rp {cat.total.toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-pastel-green h-2 rounded-full"
-                      style={{
-                        width: `${(cat.total / totalExpense) * 100}%`,
-                      }}
-                    />
+          <div className="mb-12 border-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-6">EXPENSE / CATEGORY</div>
+
+            {expenseByCategory.map((cat) => (
+              <div key={cat.name} className="mb-4">
+                <div className="flex justify-between font-mono text-xs font-bold mb-1">
+                  <span>{cat.name}</span>
+                  <span>Rp {cat.total.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="w-full bg-brutal-bg-light border border-brutal-fg-light h-6 relative">
+                  <div
+                    className="bg-brutal-accent h-full"
+                    style={{
+                      width: `${(cat.total / totalExpense) * 100}%`,
+                    }}
+                  />
+                  <div className="absolute inset-0 font-mono text-xs text-brutal-fg-light flex items-center justify-center font-bold">
+                    {totalExpense > 0 ? `${((cat.total / totalExpense) * 100).toFixed(0)}%` : '0%'}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
 
             {mostExpensiveCategory && totalExpense > 0 && (
-              <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                <p className="font-semibold text-gray-800">💡 Saran Hemat</p>
-                <p className="text-gray-700 mt-2">
-                  Pengeluaran <strong>{mostExpensiveCategory.name}</strong> mencapai{' '}
-                  <strong>{((mostExpensiveCategory.total / totalExpense) * 100).toFixed(1)}%</strong> dari
-                  total pengeluaran bulan ini. Pertimbangkan untuk mengurangi pengeluaran di kategori ini.
-                </p>
+              <div className="mt-8 border-l-4 border-brutal-red bg-brutal-bg-light border-2 border-brutal-fg-light p-4">
+                <div className="font-mono text-xs tracking-wider font-bold mb-2 text-brutal-red">ALERT / SPENDING</div>
+                <div className="font-mono text-xs leading-relaxed">
+                  {mostExpensiveCategory.name.toUpperCase()} IS {((mostExpensiveCategory.total / totalExpense) * 100).toFixed(1)}% OF TOTAL SPENDING.
+                  RECOMMEND REDUCTION.
+                </div>
               </div>
             )}
           </div>
         )}
 
+        {/* Export Controls */}
+        <div className="mb-12 border-2 border-brutal-fg-light p-6">
+          <div className="font-mono text-xs tracking-wider font-bold mb-4">EXPORT / ACTIONS</div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => {
+                const currentMonth = new Date().getMonth() + 1;
+                const currentYear = new Date().getFullYear();
+                exportToCSV(
+                  transactions,
+                  `laporan-keuangan-${currentYear}-${String(currentMonth).padStart(2, '0')}.csv`
+                );
+              }}
+              className="bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+            >
+              EXPORT CSV (BULAN INI)
+            </button>
+
+            <button
+              onClick={() => {
+                const report = generateMonthlyReport(
+                  transactions,
+                  new Date().getFullYear(),
+                  new Date().getMonth() + 1
+                );
+                const blob = new Blob([report], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `laporan-bulanan-${new Date().toISOString().split('T')[0]}.txt`;
+                link.click();
+              }}
+              className="bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+            >
+              EXPORT REPORT (TXT)
+            </button>
+
+            <button
+              onClick={() => {
+                const start = prompt('Tanggal mulai (YYYY-MM-DD):');
+                const end = prompt('Tanggal akhir (YYYY-MM-DD):');
+                if (start && end) {
+                  const filtered = transactions.filter(
+                    (t) => t.date >= start && t.date <= end
+                  );
+                  exportToCSV(filtered, `transaksi-${start}-to-${end}.csv`);
+                }
+              }}
+              className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
+            >
+              EXPORT CUSTOM RANGE
+            </button>
+          </div>
+        </div>
+
+        {/* Add Transaction Button */}
         <button
           onClick={() => setShowForm(!showForm)}
-          className="mb-8 px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition"
+          className="w-full mb-12 bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
         >
-          + Tambah Transaksi
+          {showForm ? '[ CLOSE FORM ]' : '[ ADD TRANSACTION ]'}
         </button>
 
+        {/* Form */}
         {showForm && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <div className="mb-12 border-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">INPUT / NEW TRANSACTION</div>
+
             <form onSubmit={handleAddTransaction} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tipe</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">TYPE</label>
                   <select
                     value={type}
                     onChange={(e) => {
                       setType(e.target.value as TransactionType);
                       setCategory(type === 'income' ? INCOME_CATEGORIES[0] : EXPENSE_CATEGORIES[0]);
                     }}
-                    className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                   >
-                    <option value="expense">Pengeluaran</option>
-                    <option value="income">Pemasukan</option>
+                    <option value="expense">EXPENSE</option>
+                    <option value="income">INCOME</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Kategori</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">CATEGORY</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                   >
                     {categories.map((cat) => (
                       <option key={cat} value={cat}>
@@ -234,92 +297,95 @@ export default function KeuanganPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Nominal (Rp)</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">AMOUNT (Rp)</label>
                   <input
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     required
                     min="1"
-                    className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                     placeholder="0"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Tanggal</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">DATE</label>
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Deskripsi (Opsional)</label>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">DESCRIPTION (OPT)</label>
                 <input
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
-                  placeholder="Misal: Makan di resto XYZ"
+                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  placeholder="RESTAURANT NAME / SHOP / ETC"
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-pastel-green hover:bg-pastel-green-dark text-white font-semibold py-2 rounded-lg transition"
+                  className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
                 >
-                  Simpan
+                  SAVE
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 rounded-lg transition"
+                  className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
                 >
-                  Batal
+                  CANCEL
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-pastel-green-dark">Riwayat Transaksi</h2>
+        {/* Transactions List */}
+        <div className="border-2 border-brutal-fg-light">
+          <div className="border-b-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold">DATA / TRANSACTIONS</div>
           </div>
 
           {loading ? (
-            <p className="text-center text-gray-600 py-8">Loading...</p>
+            <div className="p-6 font-mono text-sm">LOADING...</div>
           ) : transactions.length === 0 ? (
-            <p className="text-center text-gray-600 py-8">Belum ada transaksi bulan ini</p>
+            <div className="p-6 font-mono text-sm italic">NO TRANSACTIONS THIS MONTH</div>
           ) : (
-            <div className="divide-y divide-gray-200">
-              {transactions.map((item) => (
-                <div key={item.id} className="px-6 py-4 flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-800">{item.description || item.category}</p>
-                    <p className="text-sm text-gray-600">
-                      {item.category} • {format(new Date(item.date), 'dd MMM yyyy')}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span
-                      className={`font-semibold ${
-                        item.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {item.type === 'income' ? '+' : '-'} Rp {item.amount.toLocaleString('id-ID')}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteTransaction(item.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition text-sm"
-                    >
-                      Hapus
-                    </button>
+            <div>
+              {transactions.map((item, idx) => (
+                <div key={item.id} className={`border-b-2 border-brutal-fg-light p-4 ${idx % 2 === 0 ? 'bg-brutal-bg-light' : 'bg-white'}`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-mono text-xs font-bold tracking-wider mb-1">
+                        {format(new Date(item.date), 'yyyy-MM-dd')} | {item.category.toUpperCase()}
+                      </div>
+                      <div className="font-black text-lg tracking-tighter uppercase">
+                        {item.description || item.category}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`font-black text-lg tracking-tighter ${
+                        item.type === 'income' ? 'text-brutal-accent' : 'text-brutal-red'
+                      }`}>
+                        {item.type === 'income' ? '+' : '-'} Rp {item.amount.toLocaleString('id-ID')}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteTransaction(item.id)}
+                        className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light mt-2"
+                      >
+                        DEL
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

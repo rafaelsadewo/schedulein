@@ -21,12 +21,12 @@ export default function RegisterPage() {
     setSuccess('');
 
     if (password !== confirmPassword) {
-      setError('Password tidak cocok');
+      setError('PASSWORD MISMATCH');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password minimal 6 karakter');
+      setError('PASSWORD TOO SHORT (MIN 6 CHARS)');
       return;
     }
 
@@ -41,95 +41,110 @@ export default function RegisterPage() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess('Daftar berhasil! Cek email untuk konfirmasi.');
-        setTimeout(() => router.push('/login'), 2000);
+        // For mock auth, set cookie immediately
+        if (process.env.NEXT_PUBLIC_MOCK_AUTH === 'true') {
+          document.cookie = `mock-session=true; path=/; max-age=86400`;
+          setTimeout(() => router.push('/jadwal'), 1000);
+        } else {
+          setSuccess('REGISTRATION SUCCESSFUL. CHECK EMAIL.');
+          setTimeout(() => router.push('/login'), 2000);
+        }
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('SYSTEM ERROR - RETRY');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pastel-green-light via-white to-pastel-green-light">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8 text-pastel-green-dark">
-          Schedulein
+    <div className="min-h-screen flex items-center justify-center bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light">
+      <div className="w-full max-w-md border-2 border-brutal-fg-light p-8">
+        <h1 className="text-4xl font-black text-center mb-12 tracking-tighter">
+          [ SCHEDULEIN ]
         </h1>
 
-        <h2 className="text-xl font-semibold text-center mb-6 text-gray-700">Daftar Akun Baru</h2>
-
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg text-sm">
-            {error}
+        <div className="mb-8 border-2 border-brutal-fg-light p-4">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2">
+            AUTH / REGISTER
           </div>
-        )}
-
-        {success && (
-          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg text-sm">
-            {success}
+          <div className="border-t-2 border-brutal-fg-light pt-2">
+            {error ? (
+              <div className="text-brutal-red text-xs font-bold tracking-wide">
+                ERROR: {error.toUpperCase()}
+              </div>
+            ) : success ? (
+              <div className="text-brutal-accent text-xs font-bold tracking-wide">
+                SUCCESS: {success}
+              </div>
+            ) : (
+              <div className="text-brutal-accent text-xs font-bold tracking-wide">
+                READY
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        <form onSubmit={handleRegister} className="space-y-4">
+        <form onSubmit={handleRegister} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              Email
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+              EMAIL
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
-              placeholder="your@email.com"
+              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              placeholder="USER@DOMAIN.COM"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              Password
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+              PASSWORD
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
-              placeholder="••••••••"
+              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              placeholder="••••••••••••"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              Konfirmasi Password
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+              CONFIRM PASSWORD
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
-              placeholder="••••••••"
+              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              placeholder="••••••••••••"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-pastel-green hover:bg-pastel-green-dark text-white font-semibold py-2 rounded-lg transition disabled:opacity-50"
+            className="w-full bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg-light disabled:opacity-50"
           >
-            {loading ? 'Daftar...' : 'Daftar'}
+            {loading ? 'REGISTERING' : 'REGISTER'}
           </button>
         </form>
 
-        <p className="text-center mt-6 text-gray-600">
-          Sudah punya akun?{' '}
-          <Link href="/login" className="text-pastel-green-dark font-semibold hover:underline">
-            Login di sini
+        <hr className="my-8 border-0 border-t-2 border-brutal-fg-light" />
+
+        <div className="text-center font-mono text-xs tracking-wider">
+          <div className="mb-2 text-brutal-fg-light">HAVE ACCOUNT?</div>
+          <Link href="/login" className="text-brutal-accent font-bold hover:bg-brutal-accent hover:text-brutal-fg-light px-2">
+            &gt;&gt; LOGIN &lt;&lt;
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

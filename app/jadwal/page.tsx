@@ -1,10 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format, addDays, parseISO } from 'date-fns';
+import { format, addDays, eachDayOfInterval } from 'date-fns';
 import { id } from 'date-fns/locale';
 import Navbar from '@/components/Navbar';
 import { createClient } from '@/lib/supabase';
+import { getHoliday, isWorkingDay } from '@/lib/indonesian-holidays';
+import {
+  expandRecurringSchedule,
+  formatRecurrence,
+  getDayNameId,
+  type RecurringSchedule,
+  type RecurrenceType,
+  type DayOfWeek,
+} from '@/lib/recurring-schedule';
+import { requestNotificationPermission } from '@/lib/notifications';
 
 interface ScheduleItem {
   id: string;
@@ -16,22 +26,43 @@ interface ScheduleItem {
   created_at: string;
 }
 
+type Tab = 'daily' | 'recurring';
+
 export default function JadwalPage() {
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+  const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [tab, setTab] = useState<Tab>('daily');
   const [showForm, setShowForm] = useState(false);
+  const [showRecurringForm, setShowRecurringForm] = useState(false);
+
+  // Daily form
   const [title, setTitle] = useState('');
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
   const [notes, setNotes] = useState('');
+
+  // Recurring form
+  const [recurringTitle, setRecurringTitle] = useState('');
+  const [recurringStartTime, setRecurringStartTime] = useState('09:00');
+  const [recurringEndTime, setRecurringEndTime] = useState('17:00');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('weekly');
+  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState<DayOfWeek[]>([1, 2, 3, 4, 5]); // Mon-Fri
+  const [recurringNotes, setRecurringNotes] = useState('');
+
   const [loading, setLoading] = useState(true);
+  const [expandedRecurring, setExpandedRecurring] = useState<ScheduleItem[]>([]);
   const supabase = createClient();
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const holiday = getHoliday(selectedDate);
+  const isWorking = isWorkingDay(selectedDate);
 
   useEffect(() => {
+    requestNotificationPermission();
     fetchSchedules();
-  }, [selectedDate]);
+    generateRecurringInstances();
+  }, [selectedDate, recurringSchedules]);
 
   const fetchSchedules = async () => {
     setLoading(true);
@@ -47,6 +78,32 @@ export default function JadwalPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateRecurringInstances = () => {
+    if (recurringSchedules.length === 0) {
+      setExpandedRecurring([]);
+      return;
+    }
+
+    const instances: ScheduleItem[] = [];
+
+    recurringSchedules.forEach((recurring) => {
+      const expanded = expandRecurringSchedule(recurring, selectedDate, selectedDate);
+      expanded.forEach((item) => {
+        instances.push({
+          id: item.id,
+          title: item.title,
+          date: item.date,
+          start_time: item.start_time,
+          end_time: item.end_time,
+          notes: item.notes || null,
+          created_at: new Date().toISOString(),
+        });
+      });
+    });
+
+    setExpandedRecurring(instances);
   };
 
   const handleAddSchedule = async (e: React.FormEvent) => {
@@ -76,6 +133,30 @@ export default function JadwalPage() {
     }
   };
 
+  const handleAddRecurringSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newRecurring: RecurringSchedule = {
+      id: `recurring-${Date.now()}`,
+      title: recurringTitle,
+      start_time: recurringStartTime,
+      end_time: recurringEndTime,
+      recurrence_type: recurrenceType,
+      days_of_week: recurrenceType === 'weekly' ? selectedDaysOfWeek : undefined,
+      notes: recurringNotes,
+    };
+
+    setRecurringSchedules([...recurringSchedules, newRecurring]);
+
+    setRecurringTitle('');
+    setRecurringStartTime('09:00');
+    setRecurringEndTime('17:00');
+    setRecurrenceType('weekly');
+    setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
+    setRecurringNotes('');
+    setShowRecurringForm(false);
+  };
+
   const handleDeleteSchedule = async (id: string) => {
     const { error } = await supabase
       .from('schedule_items')
@@ -89,136 +170,357 @@ export default function JadwalPage() {
     }
   };
 
+  const handleDeleteRecurring = (id: string) => {
+    setRecurringSchedules(recurringSchedules.filter((r) => r.id !== id));
+  };
+
+  const toggleDayOfWeek = (day: DayOfWeek) => {
+    setSelectedDaysOfWeek((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
+  const allSchedules = [...schedules, ...expandedRecurring].sort(
+    (a, b) => a.start_time.localeCompare(b.start_time)
+  );
+
   return (
-    <div>
+    <div className="min-h-screen bg-brutal-bg-light text-brutal-fg-light">
       <Navbar />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-6 text-pastel-green-dark">Jadwal Harian</h1>
+      <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
+        <h1 className="text-5xl font-black mb-12 tracking-tighter">JADWAL</h1>
 
-          <div className="flex gap-4 mb-6">
+        {/* Date Navigation */}
+        <div className="mb-12 border-2 border-brutal-fg-light p-6">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-4 font-bold">
+            DATE / NAVIGATION
+          </div>
+
+          <div className="flex gap-4 items-center justify-between mb-6">
             <button
               onClick={() => setSelectedDate(addDays(selectedDate, -1))}
-              className="px-4 py-2 bg-pastel-green hover:bg-pastel-green-dark text-white rounded-lg transition"
+              className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
             >
-              ← Kemarin
+              &lt; PREV
             </button>
 
             <div className="flex-1 text-center">
-              <p className="text-xl font-semibold text-pastel-green-dark">
-                {format(selectedDate, 'EEEE, dd MMMM yyyy', { locale: id })}
-              </p>
+              <div className="font-mono font-bold text-lg tracking-tight">
+                {format(selectedDate, 'EEEE, dd MMM yyyy', { locale: id }).toUpperCase()}
+              </div>
+              {holiday && (
+                <div className="font-mono text-xs text-brutal-red mt-2 font-bold">
+                  🎌 {holiday.name.toUpperCase()}
+                </div>
+              )}
+              {!isWorking && !holiday && (
+                <div className="font-mono text-xs text-brutal-accent mt-2 font-bold">
+                  (HARI LIBUR AKHIR PEKAN)
+                </div>
+              )}
             </div>
 
             <button
               onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-              className="px-4 py-2 bg-pastel-green hover:bg-pastel-green-dark text-white rounded-lg transition"
+              className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
             >
-              Besok →
+              NEXT &gt;
             </button>
           </div>
 
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition"
-          >
-            + Tambah Jadwal
-          </button>
+          {/* Tab Navigation */}
+          <div className="flex gap-2 mb-6 border-2 border-brutal-fg-light">
+            <button
+              onClick={() => setTab('daily')}
+              className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm border-r-2 border-brutal-fg-light ${
+                tab === 'daily'
+                  ? 'bg-brutal-fg-light text-brutal-bg-light'
+                  : 'bg-brutal-bg-light text-brutal-fg-light hover:bg-brutal-accent'
+              }`}
+            >
+              Daily Schedule
+            </button>
+            <button
+              onClick={() => setTab('recurring')}
+              className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm ${
+                tab === 'recurring'
+                  ? 'bg-brutal-fg-light text-brutal-bg-light'
+                  : 'bg-brutal-bg-light text-brutal-fg-light hover:bg-brutal-accent'
+              }`}
+            >
+              Recurring
+            </button>
+          </div>
+
+          {tab === 'daily' && (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="w-full bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+            >
+              {showForm ? '[ CLOSE FORM ]' : '[ ADD SCHEDULE ]'}
+            </button>
+          )}
+
+          {tab === 'recurring' && (
+            <button
+              onClick={() => setShowRecurringForm(!showRecurringForm)}
+              className="w-full bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+            >
+              {showRecurringForm ? '[ CLOSE FORM ]' : '[ ADD RECURRING ]'}
+            </button>
+          )}
         </div>
 
-        {showForm && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+        {/* Daily Form */}
+        {tab === 'daily' && showForm && (
+          <div className="mb-12 border-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-4 font-bold">
+              INPUT / NEW SCHEDULE
+            </div>
+
             <form onSubmit={handleAddSchedule} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Aktivitas</label>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">ACTIVITY</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
-                  placeholder="Misal: Meeting, Olahraga, Makan"
+                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  placeholder="MEETING / EXERCISE"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Jam Mulai</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">START</label>
                   <input
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium mb-2">Jam Selesai</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">END</label>
                   <input
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Catatan (Opsional)</label>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">NOTES (OPT)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-4 py-2 border border-pastel-green rounded-lg focus:ring-2 focus:ring-pastel-green-dark focus:outline-none"
-                  placeholder="Tambahkan catatan..."
-                  rows={3}
+                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  rows={2}
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-pastel-green hover:bg-pastel-green-dark text-white font-semibold py-2 rounded-lg transition"
+                  className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
                 >
-                  Simpan
+                  SAVE
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 rounded-lg transition"
+                  className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
                 >
-                  Batal
+                  CANCEL
                 </button>
               </div>
             </form>
           </div>
         )}
 
-        <div className="space-y-4">
-          {loading ? (
-            <p className="text-center text-gray-600">Loading...</p>
-          ) : schedules.length === 0 ? (
-            <p className="text-center text-gray-600 py-8">Belum ada jadwal untuk hari ini</p>
-          ) : (
-            schedules.map((item) => (
-              <div key={item.id} className="bg-white p-4 rounded-lg shadow-md">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-pastel-green-dark">{item.title}</h3>
-                    <p className="text-sm text-gray-600">
-                      {item.start_time} - {item.end_time}
-                    </p>
-                    {item.notes && <p className="text-sm text-gray-700 mt-2">{item.notes}</p>}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteSchedule(item.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
-                  >
-                    Hapus
-                  </button>
+        {/* Recurring Form */}
+        {tab === 'recurring' && showRecurringForm && (
+          <div className="mb-12 border-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-4 font-bold">
+              INPUT / NEW RECURRING
+            </div>
+
+            <form onSubmit={handleAddRecurringSchedule} className="space-y-4">
+              <div>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">TITLE</label>
+                <input
+                  type="text"
+                  value={recurringTitle}
+                  onChange={(e) => setRecurringTitle(e.target.value)}
+                  required
+                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  placeholder="KERJA / KULIAH"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">START</label>
+                  <input
+                    type="time"
+                    value={recurringStartTime}
+                    onChange={(e) => setRecurringStartTime(e.target.value)}
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">END</label>
+                  <input
+                    type="time"
+                    value={recurringEndTime}
+                    onChange={(e) => setRecurringEndTime(e.target.value)}
+                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  />
                 </div>
               </div>
-            ))
+
+              <div>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">PATTERN</label>
+                <select
+                  value={recurrenceType}
+                  onChange={(e) => setRecurrenceType(e.target.value as RecurrenceType)}
+                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                >
+                  <option value="daily">SETIAP HARI</option>
+                  <option value="weekly">SETIAP MINGGU</option>
+                  <option value="monthly">SETIAP BULAN</option>
+                </select>
+              </div>
+
+              {recurrenceType === 'weekly' && (
+                <div>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">HARI</label>
+                  <div className="grid grid-cols-7 gap-2">
+                    {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDayOfWeek(day as DayOfWeek)}
+                        className={`p-2 font-bold text-xs border-2 ${
+                          selectedDaysOfWeek.includes(day as DayOfWeek)
+                            ? 'bg-brutal-accent text-brutal-fg-light border-brutal-accent'
+                            : 'bg-brutal-bg-light text-brutal-fg-light border-brutal-fg-light'
+                        }`}
+                      >
+                        {getDayNameId(day).slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">NOTES (OPT)</label>
+                <textarea
+                  value={recurringNotes}
+                  onChange={(e) => setRecurringNotes(e.target.value)}
+                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  rows={2}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="submit"
+                  className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
+                >
+                  SAVE
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRecurringForm(false)}
+                  className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+                >
+                  CANCEL
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Recurring List */}
+        {tab === 'recurring' && recurringSchedules.length > 0 && (
+          <div className="mb-12 border-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-6 font-bold">
+              DATA / RECURRING SCHEDULES
+            </div>
+
+            <div className="space-y-3">
+              {recurringSchedules.map((recurring) => (
+                <div key={recurring.id} className="border-2 border-brutal-fg-light p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-black text-lg mb-1 tracking-tighter uppercase">
+                        {recurring.title}
+                      </h3>
+                      <div className="font-mono text-xs tracking-wider mb-2">
+                        {recurring.start_time} → {recurring.end_time}
+                      </div>
+                      <div className="font-mono text-xs text-brutal-accent">
+                        {formatRecurrence(recurring).toUpperCase()}
+                      </div>
+                      {recurring.notes && (
+                        <div className="font-mono text-xs text-gray-700 mt-2">{recurring.notes}</div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteRecurring(recurring.id)}
+                      className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light ml-4"
+                    >
+                      DEL
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Schedule List */}
+        <div className="border-2 border-brutal-fg-light p-6">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-6 font-bold">
+            DATA / SCHEDULE ({allSchedules.length})
+          </div>
+
+          {loading ? (
+            <div className="font-mono text-sm text-brutal-fg-light">LOADING...</div>
+          ) : allSchedules.length === 0 ? (
+            <div className="font-mono text-sm text-brutal-fg-light italic">NO SCHEDULE FOR THIS DATE</div>
+          ) : (
+            <div className="space-y-3">
+              {allSchedules.map((item) => (
+                <div key={item.id} className="border-2 border-brutal-fg-light p-4 hover:bg-brutal-accent hover:text-brutal-fg-light transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-black text-lg mb-1 tracking-tighter uppercase">{item.title}</h3>
+                      <div className="font-mono text-xs tracking-wider mb-2">
+                        {item.start_time} → {item.end_time}
+                      </div>
+                      {item.notes && (
+                        <div className="font-mono text-xs text-gray-700 mt-2">{item.notes}</div>
+                      )}
+                    </div>
+                    {!item.id.includes('recurring') && (
+                      <button
+                        onClick={() => handleDeleteSchedule(item.id)}
+                        className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light ml-4"
+                      >
+                        DEL
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </main>
