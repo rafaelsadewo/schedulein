@@ -46,8 +46,7 @@ export default function JadwalPage() {
   const [recurringTitle, setRecurringTitle] = useState('');
   const [recurringStartTime, setRecurringStartTime] = useState('09:00');
   const [recurringEndTime, setRecurringEndTime] = useState('17:00');
-  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('weekly');
-  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState<DayOfWeek[]>([1, 2, 3, 4, 5]); // Mon-Fri
+  const [selectedDaysOfWeek, setSelectedDaysOfWeek] = useState<DayOfWeek[]>([1, 2, 3, 4, 5]); // Mon-Fri by default
   const [recurringNotes, setRecurringNotes] = useState('');
 
   const [loading, setLoading] = useState(true);
@@ -136,13 +135,18 @@ export default function JadwalPage() {
   const handleAddRecurringSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (selectedDaysOfWeek.length === 0) {
+      alert('Pilih minimal satu hari!');
+      return;
+    }
+
     const newRecurring: RecurringSchedule = {
       id: `recurring-${Date.now()}`,
       title: recurringTitle,
       start_time: recurringStartTime,
       end_time: recurringEndTime,
-      recurrence_type: recurrenceType,
-      days_of_week: recurrenceType === 'weekly' ? selectedDaysOfWeek : undefined,
+      recurrence_type: 'weekly',
+      days_of_week: selectedDaysOfWeek,
       notes: recurringNotes,
     };
 
@@ -151,7 +155,6 @@ export default function JadwalPage() {
     setRecurringTitle('');
     setRecurringStartTime('09:00');
     setRecurringEndTime('17:00');
-    setRecurrenceType('weekly');
     setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
     setRecurringNotes('');
     setShowRecurringForm(false);
@@ -384,39 +387,27 @@ export default function JadwalPage() {
               </div>
 
               <div>
-                <label className="block font-mono text-xs font-bold tracking-wider mb-2">PATTERN</label>
-                <select
-                  value={recurrenceType}
-                  onChange={(e) => setRecurrenceType(e.target.value as RecurrenceType)}
-                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
-                >
-                  <option value="daily">SETIAP HARI</option>
-                  <option value="weekly">SETIAP MINGGU</option>
-                  <option value="monthly">SETIAP BULAN</option>
-                </select>
-              </div>
-
-              {recurrenceType === 'weekly' && (
-                <div>
-                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">HARI</label>
-                  <div className="grid grid-cols-7 gap-2">
-                    {[0, 1, 2, 3, 4, 5, 6].map((day) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleDayOfWeek(day as DayOfWeek)}
-                        className={`p-2 font-bold text-xs border-2 ${
-                          selectedDaysOfWeek.includes(day as DayOfWeek)
-                            ? 'bg-brutal-accent text-brutal-fg-light border-brutal-accent'
-                            : 'bg-brutal-bg-light text-brutal-fg-light border-brutal-fg-light'
-                        }`}
-                      >
-                        {getDayNameId(day).slice(0, 3)}
-                      </button>
-                    ))}
-                  </div>
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">PILIH HARI (BISA MULTIPLE)</label>
+                <div className="grid grid-cols-7 gap-2 border-2 border-brutal-fg-light p-3">
+                  {[0, 1, 2, 3, 4, 5, 6].map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDayOfWeek(day as DayOfWeek)}
+                      className={`p-3 font-bold text-xs border-2 ${
+                        selectedDaysOfWeek.includes(day as DayOfWeek)
+                          ? 'bg-brutal-accent text-brutal-fg-light border-brutal-accent'
+                          : 'bg-brutal-bg-light text-brutal-fg-light border-brutal-fg-light hover:border-brutal-accent'
+                      }`}
+                    >
+                      {getDayNameId(day)}
+                    </button>
+                  ))}
                 </div>
-              )}
+                <div className="font-mono text-xs text-brutal-fg-light mt-2">
+                  Dipilih: {selectedDaysOfWeek.length} hari
+                </div>
+              </div>
 
               <div>
                 <label className="block font-mono text-xs font-bold tracking-wider mb-2">NOTES (OPT)</label>
@@ -450,33 +441,40 @@ export default function JadwalPage() {
         {/* Recurring List */}
         {tab === 'recurring' && recurringSchedules.length > 0 && (
           <div className="mb-12 border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-6 font-bold">
-              DATA / RECURRING SCHEDULES
+            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2 font-bold">
+              DATA / RECURRING SCHEDULES ({recurringSchedules.length})
+            </div>
+            <div className="font-mono text-xs text-brutal-fg-light mb-6">
+              Klik HAPUS untuk menghapus recurring schedule
             </div>
 
             <div className="space-y-3">
               {recurringSchedules.map((recurring) => (
-                <div key={recurring.id} className="border-2 border-brutal-fg-light p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-black text-lg mb-1 tracking-tighter uppercase">
+                <div key={recurring.id} className="border-2 border-brutal-fg-light p-4 bg-white hover:bg-gray-50">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <h3 className="font-black text-lg mb-2 tracking-tighter uppercase">
                         {recurring.title}
                       </h3>
                       <div className="font-mono text-xs tracking-wider mb-2">
-                        {recurring.start_time} → {recurring.end_time}
+                        ⏰ {recurring.start_time} → {recurring.end_time}
                       </div>
-                      <div className="font-mono text-xs text-brutal-accent">
-                        {formatRecurrence(recurring).toUpperCase()}
+                      <div className="font-mono text-xs text-brutal-accent font-bold">
+                        📅 {formatRecurrence(recurring).toUpperCase()}
                       </div>
                       {recurring.notes && (
-                        <div className="font-mono text-xs text-gray-700 mt-2">{recurring.notes}</div>
+                        <div className="font-mono text-xs text-gray-700 mt-2 italic">{recurring.notes}</div>
                       )}
                     </div>
                     <button
-                      onClick={() => handleDeleteRecurring(recurring.id)}
-                      className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light ml-4"
+                      onClick={() => {
+                        if (confirm(`Hapus recurring schedule "${recurring.title}"?`)) {
+                          handleDeleteRecurring(recurring.id);
+                        }
+                      }}
+                      className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light whitespace-nowrap"
                     >
-                      DEL
+                      HAPUS
                     </button>
                   </div>
                 </div>
