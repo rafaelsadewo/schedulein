@@ -132,7 +132,7 @@ export default function JadwalPage() {
       setNotes('');
       setShowForm(false);
       fetchSchedules();
-      showToast(`Jadwal "${title}" successfully added!`, 'success');
+      showToast(`Schedule "${title}" successfully added!`, 'success');
     }
   };
 
@@ -140,7 +140,7 @@ export default function JadwalPage() {
     e.preventDefault();
 
     if (selectedDaysOfWeek.length === 0) {
-      showToast('Pilih minimal satu hari!', 'warning');
+      showToast('Select at least one day!', 'warning');
       return;
     }
 
@@ -176,7 +176,7 @@ export default function JadwalPage() {
       showToast('Failed to delete schedule', 'error');
     } else {
       fetchSchedules();
-      showToast(`Jadwal "${title}" successfully deleted`, 'info');
+      showToast(`Schedule "${title}" successfully deleted`, 'info');
     }
   };
 

@@ -73,16 +73,16 @@ export default function SettingsPage() {
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <main className="max-w-4xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
-        <h1 className="text-5xl font-black mb-12 tracking-tighter">PENGATURAN</h1>
+        <h1 className="text-5xl font-black mb-12 tracking-tighter">SETTINGS</h1>
 
         <form onSubmit={handleSaveSettings} className="space-y-8">
           {/* Timezone Section */}
           <div className="border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider font-bold mb-4">WAKTU / TIMEZONE</div>
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">TIME / TIMEZONE</div>
 
             <div>
               <label className="block font-mono text-xs font-bold tracking-wider mb-2">
-                TIMEZONE ANDA
+                YOUR TIMEZONE
               </label>
               <select
                 value={timezone}
@@ -96,18 +96,18 @@ export default function SettingsPage() {
                 ))}
               </select>
               <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
-                Digunakan untuk notifikasi & waktu dalam laporan
+                Used for notifications & timestamps in reports
               </p>
             </div>
           </div>
 
           {/* Currency Section */}
           <div className="border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider font-bold mb-4">UANG / MATA UANG</div>
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">MONEY / CURRENCY</div>
 
             <div>
               <label className="block font-mono text-xs font-bold tracking-wider mb-2">
-                MATA UANG
+                CURRENCY
               </label>
               <select
                 value={currency}
@@ -121,14 +121,14 @@ export default function SettingsPage() {
                 ))}
               </select>
               <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
-                Mata uang untuk laporan keuangan (default: IDR)
+                Currency used in financial reports (default: IDR)
               </p>
             </div>
           </div>
 
           {/* Notifications Section */}
           <div className="border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider font-bold mb-4">NOTIFIKASI / REMINDERS</div>
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">NOTIFICATIONS / REMINDERS</div>
 
             <div className="space-y-4">
               <div>
@@ -140,7 +140,7 @@ export default function SettingsPage() {
                     className="w-5 h-5 border-2 border-brutal-fg-light cursor-pointer"
                   />
                   <span className="font-mono text-sm font-bold">
-                    AKTIFKAN NOTIFIKASI JADWAL
+                    ENABLE SCHEDULE NOTIFICATIONS
                   </span>
                 </label>
               </div>
@@ -148,7 +148,7 @@ export default function SettingsPage() {
               {notificationsEnabled && (
                 <div>
                   <label className="block font-mono text-xs font-bold tracking-wider mb-2">
-                    NOTIF SEBELUM JADWAL (MENIT)
+                    NOTIFY BEFORE SCHEDULE (MINUTES)
                   </label>
                   <input
                     type="number"
@@ -159,7 +159,7 @@ export default function SettingsPage() {
                     className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
                   />
                   <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
-                    Contoh: 30 = notif 30 menit sebelum jadwal dimulai
+                    Example: 30 = notify 30 minutes before schedule starts
                   </p>
                 </div>
               )}
@@ -168,7 +168,7 @@ export default function SettingsPage() {
 
           {/* Export Section */}
           <div className="border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider font-bold mb-4">EXPORT / LAPORAN</div>
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">EXPORT / REPORTS</div>
 
             <div>
               <label className="flex items-center gap-3 cursor-pointer">
@@ -179,11 +179,11 @@ export default function SettingsPage() {
                   className="w-5 h-5 border-2 border-brutal-fg-light cursor-pointer"
                 />
                 <span className="font-mono text-sm font-bold">
-                  AUTO-EXPORT LAPORAN BULANAN
+                  AUTO-EXPORT MONTHLY REPORT
                 </span>
               </label>
               <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
-                Laporan otomatis di-download tiap akhir bulan
+                Report automatically downloaded at the end of each month
               </p>
             </div>
           </div>
@@ -195,17 +195,17 @@ export default function SettingsPage() {
               disabled={loading}
               className="flex-1 bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light disabled:opacity-50"
             >
-              {loading ? 'MENYIMPAN...' : 'SIMPAN PENGATURAN'}
+              {loading ? 'SAVING...' : 'SAVE SETTINGS'}
             </button>
           </div>
         </form>
 
         {/* Info Section */}
         <div className="mt-12 border-2 border-brutal-fg-light p-6 bg-brutal-accent text-brutal-fg-light">
-          <div className="font-mono text-xs tracking-wider font-bold mb-2">INFO / TENTANG</div>
+          <div className="font-mono text-xs tracking-wider font-bold mb-2">INFO / ABOUT</div>
           <div className="font-mono text-xs leading-relaxed">
             <p>Schedulein v1.0 - Personal Schedule & Finance Tracker</p>
-            <p className="mt-2">Made with 💚 by Rafael</p>
+            <p className="mt-2">Made by Rafael</p>
             <p className="mt-4 opacity-70">
               Settings are saved locally in your browser. Not sent to any server.
             </p>

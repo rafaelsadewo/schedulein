@@ -105,7 +105,7 @@ export default function KeuanganPage() {
       showToast('Failed to delete transaction', 'error');
     } else {
       fetchTransactions();
-      showToast(`"${description}" berhasil dihapus`, 'info');
+      showToast(`"${description}" successfully deleted`, 'info');
     }
   };
 

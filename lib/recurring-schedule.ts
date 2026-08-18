@@ -71,10 +71,10 @@ export function expandRecurringSchedule(
 }
 
 /**
- * Get day name in Indonesian
+ * Get day name
  */
 export function getDayNameId(dayOfWeek: number): string {
-  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   return days[dayOfWeek];
 }
 
