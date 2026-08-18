@@ -9,10 +9,8 @@ const config: Config = {
     extend: {
       colors: {
         brutal: {
-          'bg-light': '#F4F4F0',
-          'bg-dark': '#0A0A0A',
-          'fg-light': '#050505',
-          'fg-dark': '#EAEAEA',
+          bg: 'var(--bg)',
+          fg: 'var(--fg)',
           'accent': '#B5C99A',
           'red': '#E61919',
         },

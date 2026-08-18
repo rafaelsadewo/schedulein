@@ -41,20 +41,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light">
-      <div className="w-full max-w-md border-2 border-brutal-fg-light p-8">
+    <div className="min-h-screen flex items-center justify-center bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-4">
+      <div className="w-full max-w-md border-2 border-brutal-fg p-6 sm:p-8">
         <h1 className="text-4xl font-black text-center mb-2 tracking-tighter">
           SCHEDULEIN
         </h1>
-        <p className="text-center font-mono text-xs text-brutal-fg-light mb-8 opacity-70">
+        <p className="text-center font-mono text-xs text-brutal-fg mb-8 opacity-70">
           PERSONAL SCHEDULE & FINANCE TRACKER
         </p>
 
-        <div className="mb-8 border-2 border-brutal-fg-light p-4">
-          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2">
+        <div className="mb-8 border-2 border-brutal-fg p-4">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-2">
             ◆ AUTHENTICATION / LOGIN
           </div>
-          <div className="border-t-2 border-brutal-fg-light pt-2">
+          <div className="border-t-2 border-brutal-fg pt-2">
             {error ? (
               <div className="text-brutal-red text-xs font-bold tracking-wide">
                 × {error}
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               EMAIL ADDRESS
             </label>
             <input
@@ -77,13 +77,13 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               placeholder="user@example.com"
             />
           </div>
 
           <div>
-            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               PASSWORD
             </label>
             <input
@@ -91,7 +91,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               placeholder="••••••••••••"
             />
           </div>
@@ -99,17 +99,17 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg-light disabled:opacity-50"
+            className="w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
           >
             {loading ? 'LOGGING IN' : 'LOGIN'}
           </button>
         </form>
 
-        <hr className="my-8 border-0 border-t-2 border-brutal-fg-light" />
+        <hr className="my-8 border-0 border-t-2 border-brutal-fg" />
 
         <div className="text-center font-mono text-xs tracking-wider">
-          <div className="mb-2 text-brutal-fg-light">NO ACCOUNT?</div>
-          <Link href="/register" className="text-brutal-accent font-bold hover:bg-brutal-accent hover:text-brutal-fg-light px-2">
+          <div className="mb-2 text-brutal-fg">NO ACCOUNT?</div>
+          <Link href="/register" className="text-brutal-accent font-bold hover:bg-brutal-accent hover:text-brutal-fg px-2">
             &gt;&gt; REGISTER &lt;&lt;
           </Link>
         </div>

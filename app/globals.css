@@ -9,6 +9,11 @@
   --border-thick: 2px solid var(--fg);
 }
 
+.dark {
+  --bg: #0A0A0A;
+  --fg: #EAEAEA;
+}
+
 * {
   border-radius: 0 !important;
 }

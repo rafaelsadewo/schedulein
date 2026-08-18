@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const router = useRouter();
@@ -18,25 +19,26 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-brutal-bg-light text-brutal-fg-light border-b-2 border-brutal-fg-light">
-      <div className="max-w-full px-8 py-4 flex justify-between items-center">
-        <h1 className="text-3xl font-black tracking-tighter">
+    <nav className="bg-brutal-bg text-brutal-fg border-b-2 border-brutal-fg">
+      <div className="max-w-full px-4 sm:px-8 py-4 flex flex-wrap gap-3 justify-between items-center">
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">
           [ SCHEDULEIN ]
         </h1>
 
-        <div className="flex gap-4 items-center">
-          <Link href="/jadwal" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
+        <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
+          <Link href="/jadwal" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
             SCHEDULE
           </Link>
-          <Link href="/keuangan" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
+          <Link href="/keuangan" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
             FINANCE
           </Link>
-          <Link href="/settings" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
+          <Link href="/settings" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
             ▪
           </Link>
+          <ThemeToggle />
           <button
             onClick={handleLogout}
-            className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red font-mono text-sm font-bold tracking-wider px-3 py-1 hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+            className="bg-brutal-red text-brutal-bg border-2 border-brutal-red font-mono text-xs sm:text-sm font-bold tracking-wider px-2 sm:px-3 py-1 hover:bg-brutal-fg hover:text-brutal-bg"
           >
             SIGN OUT
           </button>

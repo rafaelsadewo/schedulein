@@ -58,31 +58,31 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light">
-      <div className="w-full max-w-md border-2 border-brutal-fg-light p-8">
+    <div className="min-h-screen flex items-center justify-center bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-4">
+      <div className="w-full max-w-md border-2 border-brutal-fg p-6 sm:p-8">
         <h1 className="text-4xl font-black text-center mb-2 tracking-tighter">
           [ SCHEDULEIN ]
         </h1>
-        <p className="text-center font-mono text-xs text-brutal-fg-light mb-8 opacity-70">
+        <p className="text-center font-mono text-xs text-brutal-fg mb-8 opacity-70">
           CREATE NEW ACCOUNT TO BEGIN
         </p>
 
-        <div className="mb-8 border-2 border-brutal-fg-light p-4">
-          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2">
+        <div className="mb-8 border-2 border-brutal-fg p-4">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-2">
             ◆ AUTHENTICATION / REGISTER
           </div>
-          <div className="border-t-2 border-brutal-fg-light pt-2">
+          <div className="border-t-2 border-brutal-fg pt-2">
             {error ? (
               <div className="text-brutal-red text-xs font-bold tracking-wide">
-                [ERR] {error.toUpperCase()}
+                × {error.toUpperCase()}
               </div>
             ) : success ? (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                [OK] {success}
+                ✓ {success}
               </div>
             ) : (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                [→] Complete form to register
+                ◆ Complete form to register
               </div>
             )}
           </div>
@@ -90,7 +90,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleRegister} className="space-y-6">
           <div>
-            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               EMAIL
             </label>
             <input
@@ -98,13 +98,13 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               placeholder="USER@DOMAIN.COM"
             />
           </div>
 
           <div>
-            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               PASSWORD
             </label>
             <input
@@ -112,13 +112,13 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               placeholder="••••••••••••"
             />
           </div>
 
           <div>
-            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
+            <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               CONFIRM PASSWORD
             </label>
             <input
@@ -126,7 +126,7 @@ export default function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               placeholder="••••••••••••"
             />
           </div>
@@ -134,17 +134,17 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg-light disabled:opacity-50"
+            className="w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
           >
             {loading ? 'REGISTERING' : 'REGISTER'}
           </button>
         </form>
 
-        <hr className="my-8 border-0 border-t-2 border-brutal-fg-light" />
+        <hr className="my-8 border-0 border-t-2 border-brutal-fg" />
 
         <div className="text-center font-mono text-xs tracking-wider">
-          <div className="mb-2 text-brutal-fg-light">HAVE ACCOUNT?</div>
-          <Link href="/login" className="text-brutal-accent font-bold hover:bg-brutal-accent hover:text-brutal-fg-light px-2">
+          <div className="mb-2 text-brutal-fg">HAVE ACCOUNT?</div>
+          <Link href="/login" className="text-brutal-accent font-bold hover:bg-brutal-accent hover:text-brutal-fg px-2">
             &gt;&gt; LOGIN &lt;&lt;
           </Link>
         </div>

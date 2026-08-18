@@ -88,16 +88,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brutal-bg-light text-brutal-fg-light">
+    <div className="min-h-screen bg-brutal-bg text-brutal-fg">
       <Navbar />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      <main className="max-w-4xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
+      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
         <h1 className="text-5xl font-black mb-12 tracking-tighter">SETTINGS</h1>
 
         <form onSubmit={handleSaveSettings} className="space-y-8">
           {/* Timezone Section */}
-          <div className="border-2 border-brutal-fg-light p-6">
+          <div className="border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">TIME / TIMEZONE</div>
 
             <div>
@@ -107,7 +107,7 @@ export default function SettingsPage() {
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               >
                 {TIMEZONES.map((tz) => (
                   <option key={tz} value={tz}>
@@ -115,14 +115,14 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
-              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+              <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
                 Used for notifications & timestamps in reports
               </p>
             </div>
           </div>
 
           {/* Region Section */}
-          <div className="border-2 border-brutal-fg-light p-6">
+          <div className="border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">REGION / HOLIDAYS</div>
 
             <div className="mb-6">
@@ -132,7 +132,7 @@ export default function SettingsPage() {
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value as Country)}
-                className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               >
                 {COUNTRIES.map((c) => (
                   <option key={c.value} value={c.value}>
@@ -140,7 +140,7 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
-              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+              <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
                 Determines which national holidays are shown on the schedule page
               </p>
             </div>
@@ -155,24 +155,24 @@ export default function SettingsPage() {
                     key={day}
                     type="button"
                     onClick={() => toggleWeekendDay(day)}
-                    className={`px-4 py-2 border-2 border-brutal-fg-light font-mono text-xs font-bold ${
+                    className={`px-4 py-2 border-2 border-brutal-fg font-mono text-xs font-bold ${
                       weekendDays.includes(day)
-                        ? 'bg-brutal-fg-light text-brutal-bg-light'
-                        : 'bg-brutal-bg-light text-brutal-fg-light'
+                        ? 'bg-brutal-fg text-brutal-bg'
+                        : 'bg-brutal-bg text-brutal-fg'
                     }`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
-              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+              <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
                 Days treated as non-working days (e.g. uncheck SAT if you work Saturdays)
               </p>
             </div>
           </div>
 
           {/* Currency Section */}
-          <div className="border-2 border-brutal-fg-light p-6">
+          <div className="border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">MONEY / CURRENCY</div>
 
             <div>
@@ -182,7 +182,7 @@ export default function SettingsPage() {
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
               >
                 {CURRENCIES.map((cur) => (
                   <option key={cur} value={cur}>
@@ -190,14 +190,14 @@ export default function SettingsPage() {
                   </option>
                 ))}
               </select>
-              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+              <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
                 Currency used in financial reports (default: IDR)
               </p>
             </div>
           </div>
 
           {/* Notifications Section */}
-          <div className="border-2 border-brutal-fg-light p-6">
+          <div className="border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">NOTIFICATIONS / REMINDERS</div>
 
             <div className="space-y-4">
@@ -207,7 +207,7 @@ export default function SettingsPage() {
                     type="checkbox"
                     checked={notificationsEnabled}
                     onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                    className="w-5 h-5 border-2 border-brutal-fg-light cursor-pointer"
+                    className="w-5 h-5 border-2 border-brutal-fg cursor-pointer"
                   />
                   <span className="font-mono text-sm font-bold">
                     ENABLE SCHEDULE NOTIFICATIONS
@@ -226,9 +226,9 @@ export default function SettingsPage() {
                     onChange={(e) => setNotificationMinuteBefore(parseInt(e.target.value))}
                     min="5"
                     max="120"
-                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                    className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   />
-                  <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+                  <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
                     Example: 30 = notify 30 minutes before schedule starts
                   </p>
                 </div>
@@ -237,7 +237,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Export Section */}
-          <div className="border-2 border-brutal-fg-light p-6">
+          <div className="border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">EXPORT / REPORTS</div>
 
             <div>
@@ -246,13 +246,13 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={autoExportEnabled}
                   onChange={(e) => setAutoExportEnabled(e.target.checked)}
-                  className="w-5 h-5 border-2 border-brutal-fg-light cursor-pointer"
+                  className="w-5 h-5 border-2 border-brutal-fg cursor-pointer"
                 />
                 <span className="font-mono text-sm font-bold">
                   AUTO-EXPORT MONTHLY REPORT
                 </span>
               </label>
-              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+              <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
                 Report automatically downloaded at the end of each month
               </p>
             </div>
@@ -263,7 +263,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light disabled:opacity-50"
+              className="flex-1 bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
             >
               {loading ? 'SAVING...' : 'SAVE SETTINGS'}
             </button>
@@ -271,7 +271,7 @@ export default function SettingsPage() {
         </form>
 
         {/* Info Section */}
-        <div className="mt-12 border-2 border-brutal-fg-light p-6 bg-brutal-accent text-brutal-fg-light">
+        <div className="mt-12 border-2 border-brutal-fg p-6 bg-brutal-accent text-brutal-fg">
           <div className="font-mono text-xs tracking-wider font-bold mb-2">INFO / ABOUT</div>
           <div className="font-mono text-xs leading-relaxed">
             <p>Schedulein v1.0 - Personal Schedule & Finance Tracker</p>

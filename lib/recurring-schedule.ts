@@ -79,21 +79,29 @@ export function getDayNameId(dayOfWeek: number): string {
 }
 
 /**
+ * Get abbreviated day name (fits in tight UI grids)
+ */
+export function getDayAbbr(dayOfWeek: number): string {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  return days[dayOfWeek];
+}
+
+/**
  * Format recurrence pattern for display
  */
 export function formatRecurrence(recurring: RecurringSchedule): string {
   if (recurring.recurrence_type === 'daily') {
-    return 'Setiap hari';
+    return 'Every day';
   }
 
   if (recurring.recurrence_type === 'weekly' && recurring.days_of_week) {
     const dayNames = recurring.days_of_week.map((d) => getDayNameId(d)).join(', ');
-    return `Setiap ${dayNames}`;
+    return `Every ${dayNames}`;
   }
 
   if (recurring.recurrence_type === 'monthly') {
-    return `Setiap tanggal (bulanan)`;
+    return `Monthly (same date)`;
   }
 
-  return 'Tidak terulang';
+  return 'Does not repeat';
 }

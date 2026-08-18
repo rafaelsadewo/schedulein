@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format, addDays, eachDayOfInterval } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns';
 import Navbar from '@/components/Navbar';
 import { ToastContainer, useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase';
@@ -10,6 +10,7 @@ import {
   expandRecurringSchedule,
   formatRecurrence,
   getDayNameId,
+  getDayAbbr,
   type RecurringSchedule,
   type RecurrenceType,
   type DayOfWeek,
@@ -51,14 +52,28 @@ export default function JadwalPage() {
   const [recurringNotes, setRecurringNotes] = useState('');
 
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [recurringSubmitting, setRecurringSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [formError, setFormError] = useState('');
+  const [recurringFormError, setRecurringFormError] = useState('');
   const [expandedRecurring, setExpandedRecurring] = useState<ScheduleItem[]>([]);
   const [country, setCountry] = useState<Country>('ID');
   const [weekendDays, setWeekendDays] = useState<number[]>(DEFAULT_WEEKEND_DAYS);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [weekSchedules, setWeekSchedules] = useState<ScheduleItem[]>([]);
+  const [weekLoading, setWeekLoading] = useState(false);
   const supabase = createClient();
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const holiday = getHoliday(selectedDate, country);
   const isWorking = isWorkingDay(selectedDate, country, weekendDays);
+  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
   useEffect(() => {
     const saved = localStorage.getItem('settings');
@@ -79,6 +94,10 @@ export default function JadwalPage() {
     generateRecurringInstances();
   }, [selectedDate, recurringSchedules]);
 
+  useEffect(() => {
+    if (viewMode === 'week') fetchWeekSchedules();
+  }, [viewMode, selectedDate]);
+
   const fetchSchedules = async () => {
     setLoading(true);
     try {
@@ -93,6 +112,42 @@ export default function JadwalPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchWeekSchedules = async () => {
+    setWeekLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('schedule_items')
+        .select('*')
+        .gte('date', format(weekStart, 'yyyy-MM-dd'))
+        .lte('date', format(weekEnd, 'yyyy-MM-dd'))
+        .order('start_time', { ascending: true });
+
+      if (error) console.error(error);
+      else setWeekSchedules(data || []);
+    } finally {
+      setWeekLoading(false);
+    }
+  };
+
+  const weekRecurringInstances: ScheduleItem[] = recurringSchedules.flatMap((recurring) =>
+    expandRecurringSchedule(recurring, weekStart, weekEnd).map((item) => ({
+      id: item.id,
+      title: item.title,
+      date: item.date,
+      start_time: item.start_time,
+      end_time: item.end_time,
+      notes: item.notes || null,
+      created_at: new Date().toISOString(),
+    }))
+  );
+
+  const weekItemsByDate = (day: Date) => {
+    const key = format(day, 'yyyy-MM-dd');
+    return [...weekSchedules, ...weekRecurringInstances]
+      .filter((item) => item.date === key)
+      .sort((a, b) => a.start_time.localeCompare(b.start_time));
   };
 
   const generateRecurringInstances = () => {
@@ -124,29 +179,40 @@ export default function JadwalPage() {
   const handleAddSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { error } = await supabase
-      .from('schedule_items')
-      .insert([
-        {
-          title,
-          date: dateStr,
-          start_time: startTime,
-          end_time: endTime,
-          notes: notes || null,
-        },
-      ]);
+    if (endTime <= startTime) {
+      setFormError('End time must be after start time');
+      return;
+    }
+    setFormError('');
+    setSubmitting(true);
 
-    if (error) {
-      console.error(error);
-      showToast('Failed to add schedule', 'error');
-    } else {
-      setTitle('');
-      setStartTime('09:00');
-      setEndTime('10:00');
-      setNotes('');
-      setShowForm(false);
-      fetchSchedules();
-      showToast(`Schedule "${title}" successfully added!`, 'success');
+    try {
+      const { error } = await supabase
+        .from('schedule_items')
+        .insert([
+          {
+            title,
+            date: dateStr,
+            start_time: startTime,
+            end_time: endTime,
+            notes: notes || null,
+          },
+        ]);
+
+      if (error) {
+        console.error(error);
+        showToast('Failed to add schedule', 'error');
+      } else {
+        setTitle('');
+        setStartTime('09:00');
+        setEndTime('10:00');
+        setNotes('');
+        setShowForm(false);
+        fetchSchedules();
+        showToast(`Schedule "${title}" successfully added!`, 'success');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -154,43 +220,91 @@ export default function JadwalPage() {
     e.preventDefault();
 
     if (selectedDaysOfWeek.length === 0) {
-      showToast('Select at least one day!', 'warning');
+      setRecurringFormError('Select at least one day');
       return;
     }
+    if (recurringEndTime <= recurringStartTime) {
+      setRecurringFormError('End time must be after start time');
+      return;
+    }
+    setRecurringFormError('');
+    setRecurringSubmitting(true);
 
-    const newRecurring: RecurringSchedule = {
-      id: `recurring-${Date.now()}`,
-      title: recurringTitle,
-      start_time: recurringStartTime,
-      end_time: recurringEndTime,
-      recurrence_type: 'weekly',
-      days_of_week: selectedDaysOfWeek,
-      notes: recurringNotes,
-    };
+    try {
+      const newRecurring: RecurringSchedule = {
+        id: `recurring-${Date.now()}`,
+        title: recurringTitle,
+        start_time: recurringStartTime,
+        end_time: recurringEndTime,
+        recurrence_type: 'weekly',
+        days_of_week: selectedDaysOfWeek,
+        notes: recurringNotes,
+      };
 
-    setRecurringSchedules([...recurringSchedules, newRecurring]);
+      setRecurringSchedules([...recurringSchedules, newRecurring]);
 
-    setRecurringTitle('');
-    setRecurringStartTime('09:00');
-    setRecurringEndTime('17:00');
-    setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
-    setRecurringNotes('');
-    setShowRecurringForm(false);
-    showToast(`Recurring "${recurringTitle}" successfully added!`, 'success');
+      setRecurringTitle('');
+      setRecurringStartTime('09:00');
+      setRecurringEndTime('17:00');
+      setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
+      setRecurringNotes('');
+      setShowRecurringForm(false);
+      showToast(`Recurring "${recurringTitle}" successfully added!`, 'success');
+    } finally {
+      setRecurringSubmitting(false);
+    }
   };
 
   const handleDeleteSchedule = async (id: string, title: string) => {
-    const { error } = await supabase
-      .from('schedule_items')
-      .delete()
-      .eq('id', id);
+    setDeletingId(id);
+    try {
+      const { error } = await supabase
+        .from('schedule_items')
+        .delete()
+        .eq('id', id);
 
-    if (error) {
-      console.error(error);
-      showToast('Failed to delete schedule', 'error');
-    } else {
-      fetchSchedules();
-      showToast(`Schedule "${title}" successfully deleted`, 'info');
+      if (error) {
+        console.error(error);
+        showToast('Failed to delete schedule', 'error');
+      } else {
+        fetchSchedules();
+        showToast(`Schedule "${title}" successfully deleted`, 'info');
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} selected schedule item(s)?`)) return;
+
+    setBulkDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('schedule_items')
+        .delete()
+        .in('id', Array.from(selectedIds));
+
+      if (error) {
+        console.error(error);
+        showToast('Failed to delete selected schedule items', 'error');
+      } else {
+        showToast(`${selectedIds.size} schedule item(s) successfully deleted`, 'info');
+        setSelectedIds(new Set());
+        fetchSchedules();
+      }
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -209,99 +323,144 @@ export default function JadwalPage() {
     (a, b) => a.start_time.localeCompare(b.start_time)
   );
 
+  const filteredSchedules = allSchedules.filter((item) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      item.title.toLowerCase().includes(query) ||
+      (item.notes || '').toLowerCase().includes(query)
+    );
+  });
+
   return (
-    <div className="min-h-screen bg-brutal-bg-light text-brutal-fg-light">
+    <div className="min-h-screen bg-brutal-bg text-brutal-fg">
       <Navbar />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
+      <main className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
         <h1 className="text-5xl font-black mb-12 tracking-tighter">SCHEDULE</h1>
 
         {/* Date Navigation */}
-        <div className="mb-12 border-2 border-brutal-fg-light p-6">
-          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-4 font-bold">
+        <div className="mb-12 border-2 border-brutal-fg p-6">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
             DATE / NAVIGATION
           </div>
 
           <div className="flex gap-4 items-center justify-between mb-6">
             <button
-              onClick={() => setSelectedDate(addDays(selectedDate, -1))}
-              className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
+              onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
+              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg"
             >
               &lt; PREV
             </button>
 
             <div className="flex-1 text-center">
-              <div className="font-mono font-bold text-lg tracking-tight">
-                {format(selectedDate, 'EEEE, dd MMM yyyy').toUpperCase()}
-              </div>
-              {holiday && (
-                <div className="font-mono text-xs text-brutal-red mt-2 font-bold">
-                  ▲ {holiday.name.toUpperCase()}
-                </div>
-              )}
-              {!isWorking && !holiday && (
-                <div className="font-mono text-xs text-brutal-accent mt-2 font-bold">
-                  (WEEKEND)
+              {viewMode === 'day' ? (
+                <>
+                  <div className="font-mono font-bold text-lg tracking-tight">
+                    {format(selectedDate, 'EEEE, dd MMM yyyy').toUpperCase()}
+                  </div>
+                  {holiday && (
+                    <div className="font-mono text-xs text-brutal-red mt-2 font-bold">
+                      ▲ {holiday.name.toUpperCase()}
+                    </div>
+                  )}
+                  {!isWorking && !holiday && (
+                    <div className="font-mono text-xs text-brutal-accent mt-2 font-bold">
+                      (WEEKEND)
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="font-mono font-bold text-lg tracking-tight">
+                  {format(weekStart, 'dd MMM').toUpperCase()} — {format(weekEnd, 'dd MMM yyyy').toUpperCase()}
                 </div>
               )}
             </div>
 
             <button
-              onClick={() => setSelectedDate(addDays(selectedDate, 1))}
-              className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
+              onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
+              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg"
             >
               NEXT &gt;
             </button>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 border-2 border-brutal-fg-light">
+          {/* Day / Week View Toggle */}
+          <div className="flex gap-2 mb-6 border-2 border-brutal-fg">
             <button
-              onClick={() => setTab('daily')}
-              className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm border-r-2 border-brutal-fg-light ${
-                tab === 'daily'
-                  ? 'bg-brutal-fg-light text-brutal-bg-light'
-                  : 'bg-brutal-bg-light text-brutal-fg-light hover:bg-brutal-accent'
+              onClick={() => setViewMode('day')}
+              className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm border-r-2 border-brutal-fg ${
+                viewMode === 'day'
+                  ? 'bg-brutal-accent text-brutal-fg'
+                  : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
               }`}
             >
-              Daily Schedule
+              Day View
             </button>
             <button
-              onClick={() => setTab('recurring')}
+              onClick={() => setViewMode('week')}
               className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm ${
-                tab === 'recurring'
-                  ? 'bg-brutal-fg-light text-brutal-bg-light'
-                  : 'bg-brutal-bg-light text-brutal-fg-light hover:bg-brutal-accent'
+                viewMode === 'week'
+                  ? 'bg-brutal-accent text-brutal-fg'
+                  : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
               }`}
             >
-              Recurring
+              Week View
             </button>
           </div>
 
-          {tab === 'daily' && (
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="w-full bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
-            >
-              {showForm ? '[ CLOSE FORM ]' : '[ ADD SCHEDULE ]'}
-            </button>
-          )}
+          {viewMode === 'day' && (
+            <>
+              {/* Tab Navigation */}
+              <div className="flex gap-2 mb-6 border-2 border-brutal-fg">
+                <button
+                  onClick={() => setTab('daily')}
+                  className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm border-r-2 border-brutal-fg ${
+                    tab === 'daily'
+                      ? 'bg-brutal-fg text-brutal-bg'
+                      : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
+                  }`}
+                >
+                  Daily Schedule
+                </button>
+                <button
+                  onClick={() => setTab('recurring')}
+                  className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm ${
+                    tab === 'recurring'
+                      ? 'bg-brutal-fg text-brutal-bg'
+                      : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
+                  }`}
+                >
+                  Recurring
+                </button>
+              </div>
 
-          {tab === 'recurring' && (
-            <button
-              onClick={() => setShowRecurringForm(!showRecurringForm)}
-              className="w-full bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
-            >
-              {showRecurringForm ? '[ CLOSE FORM ]' : '[ ADD RECURRING ]'}
-            </button>
+              {tab === 'daily' && (
+                <button
+                  onClick={() => setShowForm(!showForm)}
+                  className="w-full bg-brutal-accent text-brutal-fg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg"
+                >
+                  {showForm ? '[ CLOSE FORM ]' : '[ ADD SCHEDULE ]'}
+                </button>
+              )}
+
+              {tab === 'recurring' && (
+                <button
+                  onClick={() => setShowRecurringForm(!showRecurringForm)}
+                  className="w-full bg-brutal-accent text-brutal-fg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg"
+                >
+                  {showRecurringForm ? '[ CLOSE FORM ]' : '[ ADD RECURRING ]'}
+                </button>
+              )}
+            </>
           )}
         </div>
 
         {/* Daily Form */}
         {tab === 'daily' && showForm && (
-          <div className="mb-12 border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-4 font-bold">
+          <div className="mb-12 border-2 border-brutal-fg p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
               INPUT / NEW SCHEDULE
             </div>
 
@@ -313,7 +472,7 @@ export default function JadwalPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   placeholder="MEETING / EXERCISE"
                 />
               </div>
@@ -325,7 +484,7 @@ export default function JadwalPage() {
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                    className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   />
                 </div>
                 <div>
@@ -334,7 +493,7 @@ export default function JadwalPage() {
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                    className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   />
                 </div>
               </div>
@@ -344,22 +503,30 @@ export default function JadwalPage() {
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   rows={2}
                 />
               </div>
 
+              {formError && (
+                <div className="border-2 border-brutal-red text-brutal-red font-mono text-xs font-bold p-3">
+                  × {formError}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="submit"
-                  className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
+                  disabled={submitting}
+                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
                 >
-                  SAVE
+                  {submitting ? 'SAVING...' : 'SAVE'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+                  disabled={submitting}
+                  className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
                 >
                   CANCEL
                 </button>
@@ -370,8 +537,8 @@ export default function JadwalPage() {
 
         {/* Recurring Form */}
         {tab === 'recurring' && showRecurringForm && (
-          <div className="mb-12 border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-4 font-bold">
+          <div className="mb-12 border-2 border-brutal-fg p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
               INPUT / NEW RECURRING
             </div>
 
@@ -383,7 +550,7 @@ export default function JadwalPage() {
                   value={recurringTitle}
                   onChange={(e) => setRecurringTitle(e.target.value)}
                   required
-                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   placeholder="KERJA / KULIAH"
                 />
               </div>
@@ -395,7 +562,7 @@ export default function JadwalPage() {
                     type="time"
                     value={recurringStartTime}
                     onChange={(e) => setRecurringStartTime(e.target.value)}
-                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                    className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   />
                 </div>
                 <div>
@@ -404,33 +571,33 @@ export default function JadwalPage() {
                     type="time"
                     value={recurringEndTime}
                     onChange={(e) => setRecurringEndTime(e.target.value)}
-                    className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                    className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-mono text-xs font-bold tracking-wider mb-2">PILIH HARI (BISA MULTIPLE)</label>
-                <div className="grid grid-cols-7 gap-2 border-2 border-brutal-fg-light p-3 mb-3">
+                <label className="block font-mono text-xs font-bold tracking-wider mb-2">SELECT DAYS (MULTIPLE ALLOWED)</label>
+                <div className="grid grid-cols-7 gap-2 border-2 border-brutal-fg p-3 mb-3">
                   {[0, 1, 2, 3, 4, 5, 6].map((day) => (
                     <button
                       key={day}
                       type="button"
                       onClick={() => toggleDayOfWeek(day as DayOfWeek)}
-                      className={`p-3 font-bold text-xs border-2 transition-all ${
+                      className={`p-1.5 sm:p-3 font-bold text-[10px] sm:text-xs border-2 transition-all ${
                         selectedDaysOfWeek.includes(day as DayOfWeek)
-                          ? 'bg-brutal-accent text-brutal-fg-light border-brutal-accent ring-2 ring-brutal-accent ring-offset-2'
-                          : 'bg-brutal-bg-light text-brutal-fg-light border-brutal-fg-light hover:border-brutal-accent'
+                          ? 'bg-brutal-accent text-brutal-fg border-brutal-accent ring-2 ring-brutal-accent ring-offset-2'
+                          : 'bg-brutal-bg text-brutal-fg border-brutal-fg hover:border-brutal-accent'
                       }`}
                     >
-                      {getDayNameId(day)}
+                      {getDayAbbr(day)}
                     </button>
                   ))}
                 </div>
 
                 {/* Selected Days Display */}
-                <div className="border-2 border-brutal-fg-light p-3 bg-brutal-accent text-brutal-fg-light">
-                  <div className="font-mono text-xs font-bold tracking-wider mb-2">HARI TERPILIH:</div>
+                <div className="border-2 border-brutal-fg p-3 bg-brutal-accent text-brutal-fg">
+                  <div className="font-mono text-xs font-bold tracking-wider mb-2">SELECTED DAYS:</div>
                   {selectedDaysOfWeek.length === 0 ? (
                     <div className="font-mono text-xs italic">No days selected yet</div>
                   ) : (
@@ -439,7 +606,7 @@ export default function JadwalPage() {
                     </div>
                   )}
                   <div className="font-mono text-xs mt-2 opacity-80">
-                    Total: {selectedDaysOfWeek.length} hari per minggu
+                    Total: {selectedDaysOfWeek.length} day(s) per week
                   </div>
                 </div>
               </div>
@@ -449,22 +616,30 @@ export default function JadwalPage() {
                 <textarea
                   value={recurringNotes}
                   onChange={(e) => setRecurringNotes(e.target.value)}
-                  className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+                  className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
                   rows={2}
                 />
               </div>
 
+              {recurringFormError && (
+                <div className="border-2 border-brutal-red text-brutal-red font-mono text-xs font-bold p-3">
+                  × {recurringFormError}
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <button
                   type="submit"
-                  className="bg-brutal-fg-light text-brutal-bg-light border-2 border-brutal-fg-light py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg-light"
+                  disabled={recurringSubmitting}
+                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
                 >
-                  SAVE
+                  {recurringSubmitting ? 'SAVING...' : 'SAVE'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowRecurringForm(false)}
-                  className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
+                  disabled={recurringSubmitting}
+                  className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
                 >
                   CANCEL
                 </button>
@@ -475,17 +650,17 @@ export default function JadwalPage() {
 
         {/* Recurring List */}
         {tab === 'recurring' && recurringSchedules.length > 0 && (
-          <div className="mb-12 border-2 border-brutal-fg-light p-6">
-            <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2 font-bold">
+          <div className="mb-12 border-2 border-brutal-fg p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-2 font-bold">
               DATA / RECURRING SCHEDULES ({recurringSchedules.length})
             </div>
-            <div className="font-mono text-xs text-brutal-fg-light mb-6">
+            <div className="font-mono text-xs text-brutal-fg mb-6">
               Click DELETE to remove a recurring schedule
             </div>
 
             <div className="space-y-3">
               {recurringSchedules.map((recurring) => (
-                <div key={recurring.id} className="border-2 border-brutal-fg-light p-4 bg-white hover:bg-gray-50">
+                <div key={recurring.id} className="border-2 border-brutal-fg p-4 hover:bg-brutal-accent hover:text-brutal-fg">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
                       <h3 className="font-black text-lg mb-2 tracking-tighter uppercase">
@@ -498,7 +673,7 @@ export default function JadwalPage() {
                         ▪ {formatRecurrence(recurring).toUpperCase()}
                       </div>
                       {recurring.notes && (
-                        <div className="font-mono text-xs text-gray-700 mt-2 italic">{recurring.notes}</div>
+                        <div className="font-mono text-xs text-brutal-fg opacity-70 mt-2 italic">{recurring.notes}</div>
                       )}
                     </div>
                     <button
@@ -507,7 +682,7 @@ export default function JadwalPage() {
                           handleDeleteRecurring(recurring.id, recurring.title);
                         }
                       }}
-                      className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light whitespace-nowrap"
+                      className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg whitespace-nowrap"
                     >
                       DELETE
                     </button>
@@ -519,39 +694,79 @@ export default function JadwalPage() {
         )}
 
         {/* Schedule List */}
-        <div className="border-2 border-brutal-fg-light p-6">
-          <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-6 font-bold">
-            DATA / SCHEDULE ({allSchedules.length})
+        {viewMode === 'day' && (
+        <div className="border-2 border-brutal-fg p-6">
+          <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
+            DATA / SCHEDULE ({filteredSchedules.length}{searchQuery ? ` OF ${allSchedules.length}` : ''})
           </div>
 
+          {allSchedules.length > 0 && (
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="SEARCH ACTIVITY OR NOTES"
+              className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm mb-4"
+            />
+          )}
+
+          {selectedIds.size > 0 && (
+            <div className="flex items-center justify-between mb-6 border-2 border-brutal-red p-3">
+              <span className="font-mono text-xs font-bold text-brutal-red">
+                {selectedIds.size} SELECTED
+              </span>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
+              >
+                {bulkDeleting ? 'DELETING...' : 'DELETE SELECTED'}
+              </button>
+            </div>
+          )}
+
           {loading ? (
-            <div className="font-mono text-sm text-brutal-fg-light">[→] LOADING...</div>
+            <div className="font-mono text-sm text-brutal-fg">◆ LOADING...</div>
           ) : allSchedules.length === 0 ? (
-            <div className="bg-brutal-accent text-brutal-fg-light p-4 font-mono text-xs leading-relaxed">
-              <div className="font-bold mb-2">[!] NO SCHEDULE FOUND</div>
+            <div className="bg-brutal-accent text-brutal-fg p-4 font-mono text-xs leading-relaxed">
+              <div className="font-bold mb-2">▲ NO SCHEDULE FOUND</div>
               <div>No schedule found for {format(selectedDate, 'dd MMMM yyyy')}.</div>
               <div className="mt-2">Click [ ADD SCHEDULE ] or [ ADD RECURRING ] to get started.</div>
             </div>
+          ) : filteredSchedules.length === 0 ? (
+            <div className="bg-brutal-accent text-brutal-fg p-4 font-mono text-xs leading-relaxed">
+              <div className="font-bold mb-2">▲ NO MATCHES</div>
+              <div>No schedule items match your search.</div>
+            </div>
           ) : (
             <div className="space-y-3">
-              {allSchedules.map((item) => (
-                <div key={item.id} className="border-2 border-brutal-fg-light p-4 hover:bg-brutal-accent hover:text-brutal-fg-light transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
+              {filteredSchedules.map((item) => (
+                <div key={item.id} className="border-2 border-brutal-fg p-4 hover:bg-brutal-accent hover:text-brutal-fg transition-colors">
+                  <div className="flex justify-between items-start gap-3">
+                    {!item.id.includes('recurring') && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(item.id)}
+                        onChange={() => toggleSelected(item.id)}
+                        className="w-5 h-5 border-2 border-brutal-fg cursor-pointer mt-1 shrink-0"
+                      />
+                    )}
+                    <div className="flex-1">
                       <h3 className="font-black text-lg mb-1 tracking-tighter uppercase">{item.title}</h3>
                       <div className="font-mono text-xs tracking-wider mb-2">
                         {item.start_time} → {item.end_time}
                       </div>
                       {item.notes && (
-                        <div className="font-mono text-xs text-gray-700 mt-2">{item.notes}</div>
+                        <div className="font-mono text-xs text-brutal-fg opacity-70 mt-2">{item.notes}</div>
                       )}
                     </div>
                     {!item.id.includes('recurring') && (
                       <button
                         onClick={() => handleDeleteSchedule(item.id, item.title)}
-                        className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light ml-4"
+                        disabled={deletingId === item.id}
+                        className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg ml-4 disabled:opacity-50"
                       >
-                        DEL
+                        {deletingId === item.id ? '...' : 'DEL'}
                       </button>
                     )}
                   </div>
@@ -560,6 +775,72 @@ export default function JadwalPage() {
             </div>
           )}
         </div>
+        )}
+
+        {/* Week Grid */}
+        {viewMode === 'week' && (
+          <div className="border-2 border-brutal-fg p-6">
+            <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-6 font-bold">
+              DATA / WEEK
+            </div>
+
+            {weekLoading ? (
+              <div className="font-mono text-sm text-brutal-fg">◆ LOADING...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-0 border-2 border-brutal-fg">
+                {weekDays.map((day, idx) => {
+                  const dayHoliday = getHoliday(day, country);
+                  const dayWorking = isWorkingDay(day, country, weekendDays);
+                  const dayItems = weekItemsByDate(day);
+                  const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`border-brutal-fg p-3 md:border-r-2 border-b-2 md:border-b-0 last:border-r-0 ${
+                        isToday ? 'bg-brutal-accent/20' : ''
+                      }`}
+                    >
+                      <button
+                        onClick={() => {
+                          setSelectedDate(day);
+                          setViewMode('day');
+                        }}
+                        className="w-full text-left mb-3 border-b-2 border-brutal-fg pb-2 hover:text-brutal-accent"
+                      >
+                        <div className="font-mono text-xs font-bold tracking-wider">
+                          {format(day, 'EEE').toUpperCase()}
+                        </div>
+                        <div className="font-black text-lg tracking-tighter">
+                          {format(day, 'dd')}
+                        </div>
+                        {dayHoliday && (
+                          <div className="font-mono text-[10px] text-brutal-red font-bold mt-1">▲ HOLIDAY</div>
+                        )}
+                        {!dayWorking && !dayHoliday && (
+                          <div className="font-mono text-[10px] text-brutal-accent font-bold mt-1">WEEKEND</div>
+                        )}
+                      </button>
+
+                      <div className="space-y-2">
+                        {dayItems.length === 0 ? (
+                          <div className="font-mono text-[10px] text-brutal-fg opacity-50">—</div>
+                        ) : (
+                          dayItems.map((item) => (
+                            <div key={item.id} className="font-mono text-[10px] border-2 border-brutal-fg p-1.5">
+                              <div className="font-bold truncate">{item.title}</div>
+                              <div className="opacity-70">{item.start_time}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
