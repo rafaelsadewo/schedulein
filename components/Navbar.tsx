@@ -25,13 +25,13 @@ export default function Navbar() {
         </h1>
 
         <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
-          <Link href="/jadwal" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-red hover:text-brutal-bg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
+          <Link href="/jadwal" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
             SCHEDULE
           </Link>
-          <Link href="/keuangan" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-red hover:text-brutal-bg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
+          <Link href="/keuangan" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
             FINANCE
           </Link>
-          <Link href="/settings" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-red hover:text-brutal-bg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
+          <Link href="/settings" className="font-mono text-xs sm:text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg px-2 sm:px-3 py-1 border-2 border-brutal-fg">
             ▪
           </Link>
           <button

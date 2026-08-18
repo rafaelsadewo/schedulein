@@ -28,7 +28,7 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   }, [duration, onClose]);
 
   const bgColor = {
-    success: 'bg-brutal-fg text-brutal-bg border-brutal-fg',
+    success: 'bg-brutal-accent text-brutal-fg border-brutal-accent',
     error: 'bg-brutal-red text-brutal-bg border-brutal-red',
     info: 'bg-brutal-bg text-brutal-fg border-brutal-fg',
     warning: 'bg-brutal-bg text-brutal-red border-brutal-red',

@@ -233,7 +233,7 @@ export default function KeuanganPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mb-12 border-2 border-brutal-fg">
           <div className="border-r-2 border-b-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-2">INCOME</div>
-            <div className="text-3xl font-black tracking-tighter text-brutal-fg">
+            <div className="text-3xl font-black tracking-tighter text-brutal-accent-deep">
               Rp {totalIncome.toLocaleString('id-ID')}
             </div>
           </div>
@@ -248,7 +248,7 @@ export default function KeuanganPage() {
           <div className="border-b-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-2">BALANCE</div>
             <div className={`text-3xl font-black tracking-tighter ${
-              totalIncome - totalExpense >= 0 ? 'text-brutal-fg' : 'text-brutal-red'
+              totalIncome - totalExpense >= 0 ? 'text-brutal-accent-deep' : 'text-brutal-red'
             }`}>
               Rp {(totalIncome - totalExpense).toLocaleString('id-ID')}
             </div>
@@ -268,7 +268,7 @@ export default function KeuanganPage() {
                 </div>
                 <div className="w-full bg-brutal-bg border border-brutal-fg h-6 relative">
                   <div
-                    className="bg-brutal-red h-full"
+                    className="bg-brutal-accent h-full"
                     style={{
                       width: `${(cat.total / totalExpense) * 100}%`,
                     }}
@@ -307,7 +307,7 @@ export default function KeuanganPage() {
                 );
                 showToast('CSV file successfully downloaded', 'success');
               }}
-              className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg hover:border-brutal-fg"
+              className="bg-brutal-accent text-brutal-fg border-2 border-brutal-accent py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg hover:border-brutal-fg"
             >
               EXPORT CSV (THIS MONTH)
             </button>
@@ -326,14 +326,14 @@ export default function KeuanganPage() {
                 link.click();
                 showToast('Report file successfully downloaded', 'success');
               }}
-              className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg hover:border-brutal-fg"
+              className="bg-brutal-accent text-brutal-fg border-2 border-brutal-accent py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg hover:border-brutal-fg"
             >
               EXPORT REPORT (TXT)
             </button>
 
             <button
               onClick={() => setShowRangeExport(!showRangeExport)}
-              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-red hover:border-brutal-red"
+              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent"
             >
               {showRangeExport ? '[ CLOSE ]' : 'EXPORT CUSTOM RANGE'}
             </button>
@@ -370,7 +370,7 @@ export default function KeuanganPage() {
 
               <button
                 onClick={handleExportRange}
-                className="w-full bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:border-brutal-fg"
+                className="w-full bg-brutal-accent text-brutal-fg border-2 border-brutal-accent py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg hover:border-brutal-fg"
               >
                 DOWNLOAD CSV
               </button>
@@ -381,7 +381,7 @@ export default function KeuanganPage() {
         {/* Add Transaction Button */}
         <button
           onClick={() => setShowForm(!showForm)}
-          className="w-full mb-12 bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:border-brutal-fg"
+          className="w-full mb-12 bg-brutal-accent text-brutal-fg border-2 border-brutal-accent py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg hover:border-brutal-fg"
         >
           {showForm ? '[ CLOSE FORM ]' : '[ ADD TRANSACTION ]'}
         </button>
@@ -470,7 +470,7 @@ export default function KeuanganPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-red hover:border-brutal-red disabled:opacity-50"
+                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
                 >
                   {submitting ? 'SAVING...' : 'SAVE'}
                 </button>
@@ -530,20 +530,20 @@ export default function KeuanganPage() {
           {loading ? (
             <div className="p-6 font-mono text-sm">◆ LOADING...</div>
           ) : transactions.length === 0 ? (
-            <div className="p-6 bg-brutal-red text-brutal-bg font-mono text-xs leading-relaxed">
+            <div className="p-6 bg-brutal-accent text-brutal-fg font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">▲ NO TRANSACTIONS FOUND</div>
               <div>No transactions found for this month.</div>
               <div className="mt-2">Click [ ADD TRANSACTION ] to start tracking your income or expenses.</div>
             </div>
           ) : filteredTransactions.length === 0 ? (
-            <div className="p-6 bg-brutal-red text-brutal-bg font-mono text-xs leading-relaxed">
+            <div className="p-6 bg-brutal-accent text-brutal-fg font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">▲ NO MATCHES</div>
               <div>No transactions match your search or filter.</div>
             </div>
           ) : (
             <div>
               {filteredTransactions.map((item, idx) => (
-                <div key={item.id} className={`border-b-2 border-brutal-fg p-4 ${idx % 2 === 0 ? 'bg-brutal-bg' : 'bg-brutal-red/10'}`}>
+                <div key={item.id} className={`border-b-2 border-brutal-fg p-4 ${idx % 2 === 0 ? 'bg-brutal-bg' : 'bg-brutal-accent/10'}`}>
                   <div className="flex justify-between items-start gap-3">
                     <input
                       type="checkbox"
@@ -561,7 +561,7 @@ export default function KeuanganPage() {
                     </div>
                     <div className="text-right">
                       <div className={`font-black text-lg tracking-tighter ${
-                        item.type === 'income' ? 'text-brutal-fg' : 'text-brutal-red'
+                        item.type === 'income' ? 'text-brutal-accent-deep' : 'text-brutal-red'
                       }`}>
                         {item.type === 'income' ? '+' : '-'} Rp {item.amount.toLocaleString('id-ID')}
                       </div>

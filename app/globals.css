@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #F4F4F0;
+  --bg: #E9F5DB;
   --fg: #050505;
+  --accent: #B5C99A;
+  --accent-hover: #97A97C;
+  --accent-dark: #87986A;
+  --accent-deep: #718355;
   --red: #E61919;
   --border: 1px solid var(--fg);
   --border-thick: 2px solid var(--fg);
@@ -84,8 +88,8 @@ button {
 }
 
 button:hover {
-  background: var(--red);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--fg);
 }
 
 button:active {
@@ -140,8 +144,8 @@ a {
 }
 
 a:hover {
-  background: var(--red);
-  color: var(--bg);
+  background: var(--accent);
+  color: var(--fg);
 }
 
 /* ASCII frame */

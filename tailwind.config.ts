@@ -11,6 +11,10 @@ const config: Config = {
         brutal: {
           bg: 'var(--bg)',
           fg: 'var(--fg)',
+          accent: '#B5C99A',
+          'accent-hover': '#97A97C',
+          'accent-dark': '#87986A',
+          'accent-deep': '#718355',
           'red': '#E61919',
         },
       },

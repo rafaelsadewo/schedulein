@@ -263,7 +263,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-red hover:border-brutal-red disabled:opacity-50"
+              className="flex-1 bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
             >
               {loading ? 'SAVING...' : 'SAVE SETTINGS'}
             </button>
@@ -271,7 +271,7 @@ export default function SettingsPage() {
         </form>
 
         {/* Info Section */}
-        <div className="mt-12 border-2 border-brutal-fg p-6">
+        <div className="mt-12 border-2 border-brutal-fg p-6 bg-brutal-accent text-brutal-fg">
           <div className="font-mono text-xs tracking-wider font-bold mb-2">INFO / ABOUT</div>
           <div className="font-mono text-xs leading-relaxed">
             <p>Schedulein v1.0 - Personal Schedule & Finance Tracker</p>
