@@ -124,7 +124,7 @@ export default function JadwalPage() {
 
     if (error) {
       console.error(error);
-      showToast('Gagal menambah jadwal', 'error');
+      showToast('Failed to add schedule', 'error');
     } else {
       setTitle('');
       setStartTime('09:00');
@@ -132,7 +132,7 @@ export default function JadwalPage() {
       setNotes('');
       setShowForm(false);
       fetchSchedules();
-      showToast(`Jadwal "${title}" berhasil ditambahkan!`, 'success');
+      showToast(`Jadwal "${title}" successfully added!`, 'success');
     }
   };
 
@@ -162,7 +162,7 @@ export default function JadwalPage() {
     setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
     setRecurringNotes('');
     setShowRecurringForm(false);
-    showToast(`Recurring "${recurringTitle}" berhasil ditambahkan!`, 'success');
+    showToast(`Recurring "${recurringTitle}" successfully added!`, 'success');
   };
 
   const handleDeleteSchedule = async (id: string, title: string) => {
@@ -173,16 +173,16 @@ export default function JadwalPage() {
 
     if (error) {
       console.error(error);
-      showToast('Gagal menghapus jadwal', 'error');
+      showToast('Failed to delete schedule', 'error');
     } else {
       fetchSchedules();
-      showToast(`Jadwal "${title}" berhasil dihapus`, 'info');
+      showToast(`Jadwal "${title}" successfully deleted`, 'info');
     }
   };
 
   const handleDeleteRecurring = (id: string, title: string) => {
     setRecurringSchedules(recurringSchedules.filter((r) => r.id !== id));
-    showToast(`Recurring "${title}" berhasil dihapus`, 'info');
+    showToast(`Recurring "${title}" successfully deleted`, 'info');
   };
 
   const toggleDayOfWeek = (day: DayOfWeek) => {
@@ -489,7 +489,7 @@ export default function JadwalPage() {
                     </div>
                     <button
                       onClick={() => {
-                        if (confirm(`Hapus recurring schedule "${recurring.title}"?`)) {
+                        if (confirm(`Delete recurring schedule "${recurring.title}"?`)) {
                           handleDeleteRecurring(recurring.id, recurring.title);
                         }
                       }}

@@ -82,7 +82,7 @@ export function setupScheduleNotification(
   const interval = setInterval(() => {
     if (shouldNotify(scheduleTime, minutesBefore)) {
       sendNotification(`⏰ Reminder: ${scheduleTitle}`, {
-        body: `Jadwal "${scheduleTitle}" dimulai pada jam ${scheduleTime}`,
+        body: `Schedule "${scheduleTitle}" starts at ${scheduleTime}`,
         tag: `schedule-${scheduleTitle}-${scheduleTime}`,
       });
       clearInterval(interval);

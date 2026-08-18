@@ -59,9 +59,9 @@ export default function SettingsPage() {
       };
 
       localStorage.setItem('settings', JSON.stringify(settings));
-      showToast('Pengaturan berhasil disimpan!', 'success');
+      showToast('Settings successfully saved', 'success');
     } catch (error) {
-      showToast('Gagal menyimpan pengaturan', 'error');
+      showToast('Failed to save settings', 'error');
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ export default function SettingsPage() {
             <p>Schedulein v1.0 - Personal Schedule & Finance Tracker</p>
             <p className="mt-2">Made with 💚 by Rafael</p>
             <p className="mt-4 opacity-70">
-              Pengaturan disimpan di browser lokal. Tidak dikirim ke server manapun.
+              Settings are saved locally in your browser. Not sent to any server.
             </p>
           </div>
         </div>

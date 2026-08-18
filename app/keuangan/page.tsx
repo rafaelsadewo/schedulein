@@ -81,7 +81,7 @@ export default function KeuanganPage() {
 
     if (error) {
       console.error(error);
-      showToast('Gagal menambah transaksi', 'error');
+      showToast('Failed to add transaction', 'error');
     } else {
       setType('expense');
       setCategory('Makan');
@@ -90,7 +90,7 @@ export default function KeuanganPage() {
       setDate(format(new Date(), 'yyyy-MM-dd'));
       setShowForm(false);
       fetchTransactions();
-      showToast(`Transaksi berhasil ditambahkan!`, 'success');
+      showToast(`Transaction successfully added!`, 'success');
     }
   };
 
@@ -102,7 +102,7 @@ export default function KeuanganPage() {
 
     if (error) {
       console.error(error);
-      showToast('Gagal menghapus transaksi', 'error');
+      showToast('Failed to delete transaction', 'error');
     } else {
       fetchTransactions();
       showToast(`"${description}" berhasil dihapus`, 'info');
@@ -214,7 +214,7 @@ export default function KeuanganPage() {
                   transactions,
                   `laporan-keuangan-${currentYear}-${String(currentMonth).padStart(2, '0')}.csv`
                 );
-                showToast('File CSV berhasil diunduh!', 'success');
+                showToast('CSV file successfully downloaded', 'success');
               }}
               className="bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
             >
@@ -233,7 +233,7 @@ export default function KeuanganPage() {
                 link.href = URL.createObjectURL(blob);
                 link.download = `laporan-bulanan-${new Date().toISOString().split('T')[0]}.txt`;
                 link.click();
-                showToast('File laporan berhasil diunduh!', 'success');
+                showToast('Report file successfully downloaded', 'success');
               }}
               className="bg-brutal-accent text-brutal-fg-light border-2 border-brutal-fg-light py-2 px-4 font-bold text-xs uppercase tracking-tight hover:bg-brutal-fg-light hover:text-brutal-bg-light"
             >
@@ -242,17 +242,17 @@ export default function KeuanganPage() {
 
             <button
               onClick={() => {
-                const start = prompt('Tanggal mulai (YYYY-MM-DD):');
-                const end = prompt('Tanggal akhir (YYYY-MM-DD):');
+                const start = prompt('Start date (YYYY-MM-DD):');
+                const end = prompt('End date (YYYY-MM-DD):');
                 if (start && end) {
                   const filtered = transactions.filter(
                     (t) => t.date >= start && t.date <= end
                   );
                   if (filtered.length === 0) {
-                    showToast('Tidak ada transaksi dalam range tanggal tersebut', 'warning');
+                    showToast('No transactions in the selected date range', 'warning');
                   } else {
                     exportToCSV(filtered, `transaksi-${start}-to-${end}.csv`);
-                    showToast(`${filtered.length} transaksi berhasil diunduh!`, 'success');
+                    showToast(`${filtered.length} transactions successfully downloaded`, 'success');
                   }
                 }
               }}

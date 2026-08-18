@@ -13,7 +13,7 @@ export interface Transaction {
  * Export transactions to CSV
  */
 export function exportToCSV(transactions: Transaction[], filename: string = 'transactions.csv') {
-  const headers = ['Tanggal', 'Tipe', 'Kategori', 'Deskripsi', 'Nominal'];
+  const headers = ['Date', 'Type', 'Category', 'Description', 'Amount'];
 
   const rows = transactions.map((t) => [
     t.date,
@@ -95,8 +95,8 @@ export function generateMonthlyReport(
   let report = `LAPORAN KEUANGAN - ${monthName.toUpperCase()}\n`;
   report += `${'='.repeat(50)}\n\n`;
   report += `RINGKASAN:\n`;
-  report += `Total Pemasukan  : Rp ${income.toLocaleString('id-ID')}\n`;
-  report += `Total Pengeluaran: Rp ${expense.toLocaleString('id-ID')}\n`;
+  report += `Total Income    : Rp ${income.toLocaleString('id-ID')}\n`;
+  report += `Total Expense   : Rp ${expense.toLocaleString('id-ID')}\n`;
   report += `Sisa             : Rp ${(income - expense).toLocaleString('id-ID')}\n\n`;
 
   report += `PENGELUARAN PER KATEGORI:\n`;
