@@ -25,10 +25,12 @@ export default function Home() {
   }, [router, supabase]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-pastel-green-light">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-pastel-green-dark mb-2">Schedulein</h1>
-        <p className="text-gray-600">Redirecting...</p>
+    <div className="min-h-screen flex items-center justify-center bg-brutal-bg text-brutal-fg p-4">
+      <div className="w-full max-w-md border-2 border-brutal-fg p-8 text-center">
+        <h1 className="text-4xl font-black tracking-tighter mb-4">[ SCHEDULEIN ]</h1>
+        <p className="font-mono text-xs tracking-wider uppercase text-brutal-accent-deep">
+          ◆ Redirecting...
+        </p>
       </div>
     </div>
   );

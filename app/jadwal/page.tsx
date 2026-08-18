@@ -15,7 +15,7 @@ import {
   type RecurrenceType,
   type DayOfWeek,
 } from '@/lib/recurring-schedule';
-import { requestNotificationPermission } from '@/lib/notifications';
+import { requestNotificationPermission, setupScheduleNotification } from '@/lib/notifications';
 
 interface ScheduleItem {
   id: string;
@@ -66,6 +66,9 @@ export default function JadwalPage() {
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [weekSchedules, setWeekSchedules] = useState<ScheduleItem[]>([]);
   const [weekLoading, setWeekLoading] = useState(false);
+  const [recurringLoaded, setRecurringLoaded] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationMinuteBefore, setNotificationMinuteBefore] = useState(30);
   const supabase = createClient();
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -82,6 +85,8 @@ export default function JadwalPage() {
         const settings = JSON.parse(saved);
         setCountry(settings.country || 'ID');
         setWeekendDays(settings.weekendDays || DEFAULT_WEEKEND_DAYS);
+        setNotificationsEnabled(settings.notificationsEnabled !== false);
+        setNotificationMinuteBefore(settings.notificationMinuteBefore || 30);
       } catch (e) {
         console.error('Error loading settings:', e);
       }
@@ -89,10 +94,68 @@ export default function JadwalPage() {
   }, []);
 
   useEffect(() => {
+    const saved = localStorage.getItem('recurring-schedules');
+    if (saved) {
+      try {
+        setRecurringSchedules(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error loading recurring schedules:', e);
+      }
+    }
+    setRecurringLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!recurringLoaded) return;
+    localStorage.setItem('recurring-schedules', JSON.stringify(recurringSchedules));
+  }, [recurringSchedules, recurringLoaded]);
+
+  useEffect(() => {
     requestNotificationPermission();
     fetchSchedules();
     generateRecurringInstances();
   }, [selectedDate, recurringSchedules]);
+
+  useEffect(() => {
+    if (!notificationsEnabled || !recurringLoaded) return;
+
+    let cancelled = false;
+    const cleanups: Array<() => void> = [];
+
+    const setupTodaysNotifications = async () => {
+      const today = new Date();
+      const todayStr = format(today, 'yyyy-MM-dd');
+      const nowTime = format(today, 'HH:mm');
+
+      const { data } = await supabase
+        .from('schedule_items')
+        .select('*')
+        .eq('date', todayStr)
+        .order('start_time', { ascending: true });
+
+      if (cancelled) return;
+
+      const todaysRecurring = recurringSchedules.flatMap((r) =>
+        expandRecurringSchedule(r, today, today)
+      );
+      const todaysAll = [...(data || []), ...todaysRecurring];
+
+      todaysAll
+        .filter((item) => item.start_time > nowTime)
+        .forEach((item) => {
+          cleanups.push(
+            setupScheduleNotification(item.title, item.start_time, notificationMinuteBefore)
+          );
+        });
+    };
+
+    setupTodaysNotifications();
+
+    return () => {
+      cancelled = true;
+      cleanups.forEach((fn) => fn());
+    };
+  }, [schedules, recurringSchedules, recurringLoaded, notificationsEnabled, notificationMinuteBefore]);
 
   useEffect(() => {
     if (viewMode === 'week') fetchWeekSchedules();

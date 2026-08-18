@@ -55,7 +55,39 @@ export default function KeuanganPage() {
 
   useEffect(() => {
     fetchTransactions();
+    checkAutoExport();
   }, []);
+
+  const checkAutoExport = async () => {
+    let autoExportEnabled = true;
+    try {
+      const saved = localStorage.getItem('settings');
+      if (saved) autoExportEnabled = JSON.parse(saved).autoExportEnabled !== false;
+    } catch (e) {
+      console.error('Error loading settings:', e);
+    }
+    if (!autoExportEnabled) return;
+
+    const now = new Date();
+    if (now.getDate() > 3) return; // only check within the first few days of the month
+
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthKey = format(lastMonthDate, 'yyyy-MM');
+
+    if (localStorage.getItem('last-auto-export') === lastMonthKey) return;
+
+    const { data } = await supabase
+      .from('transactions')
+      .select('*')
+      .gte('date', `${lastMonthKey}-01`)
+      .lte('date', `${lastMonthKey}-31`);
+
+    if (data && data.length > 0) {
+      await autoExportMonthly(data, lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1);
+      showToast(`Auto-exported ${lastMonthKey} report`, 'info');
+    }
+    localStorage.setItem('last-auto-export', lastMonthKey);
+  };
 
   const fetchTransactions = async () => {
     setLoading(true);
