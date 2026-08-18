@@ -32,7 +32,7 @@ export default function Navbar() {
             FINANCE
           </Link>
           <Link href="/settings" className="font-mono text-sm font-bold tracking-wider hover:bg-brutal-accent hover:text-brutal-fg-light px-3 py-1 border-2 border-brutal-fg-light">
-            ⚙️
+            ▪
           </Link>
           <button
             onClick={handleLogout}
