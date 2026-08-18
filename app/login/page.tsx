@@ -44,7 +44,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light">
       <div className="w-full max-w-md border-2 border-brutal-fg-light p-8">
         <h1 className="text-4xl font-black text-center mb-2 tracking-tighter">
-          [ SCHEDULEIN ]
+          SCHEDULEIN
         </h1>
         <p className="text-center font-mono text-xs text-brutal-fg-light mb-8 opacity-70">
           PERSONAL SCHEDULE & FINANCE TRACKER
@@ -52,16 +52,16 @@ export default function LoginPage() {
 
         <div className="mb-8 border-2 border-brutal-fg-light p-4">
           <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2">
-            AUTH / LOGIN
+            ◆ AUTHENTICATION / LOGIN
           </div>
           <div className="border-t-2 border-brutal-fg-light pt-2">
             {error ? (
               <div className="text-brutal-red text-xs font-bold tracking-wide">
-                [ERR] {error.toUpperCase()}
+                × {error}
               </div>
             ) : (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                [→] SIAP INPUT CREDENTIALS
+                ◆ Ready to authenticate
               </div>
             )}
           </div>
@@ -70,7 +70,7 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg-light">
-              EMAIL
+              EMAIL ADDRESS
             </label>
             <input
               type="email"
@@ -78,7 +78,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
-              placeholder="USER@DOMAIN.COM"
+              placeholder="user@example.com"
             />
           </div>
 

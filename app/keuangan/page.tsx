@@ -374,7 +374,7 @@ export default function KeuanganPage() {
             <div className="p-6 font-mono text-sm">[→] LOADING...</div>
           ) : transactions.length === 0 ? (
             <div className="p-6 bg-brutal-accent text-brutal-fg-light font-mono text-xs leading-relaxed">
-              <div className="font-bold mb-2">[!] TIDAK ADA TRANSAKSI</div>
+              <div className="font-bold mb-2">[!] NO TRANSACTIONS FOUND</div>
               <div>Belum ada transaksi di bulan ini.</div>
               <div className="mt-2">Klik tombol [ ADD TRANSACTION ] untuk mulai catat pengeluaran atau pemasukan.</div>
             </div>

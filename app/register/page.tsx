@@ -64,12 +64,12 @@ export default function RegisterPage() {
           [ SCHEDULEIN ]
         </h1>
         <p className="text-center font-mono text-xs text-brutal-fg-light mb-8 opacity-70">
-          DAFTAR AKUN BARU UNTUK MEMULAI
+          CREATE NEW ACCOUNT TO BEGIN
         </p>
 
         <div className="mb-8 border-2 border-brutal-fg-light p-4">
           <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2">
-            AUTH / REGISTER
+            ◆ AUTHENTICATION / REGISTER
           </div>
           <div className="border-t-2 border-brutal-fg-light pt-2">
             {error ? (
@@ -82,7 +82,7 @@ export default function RegisterPage() {
               </div>
             ) : (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                [→] ISI FORM UNTUK DAFTAR
+                [→] Complete form to register
               </div>
             )}
           </div>
