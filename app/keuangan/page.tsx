@@ -51,18 +51,38 @@ export default function KeuanganPage() {
   const [filterType, setFilterType] = useState<'all' | TransactionType>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [currency, setCurrency] = useState('IDR');
   const supabase = createClient();
 
   useEffect(() => {
     fetchTransactions();
     checkAutoExport();
+
+    try {
+      const saved = localStorage.getItem('settings');
+      if (saved) setCurrency(JSON.parse(saved).currency || 'IDR');
+    } catch (e) {
+      console.error('Error loading settings:', e);
+    }
   }, []);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
 
   const checkAutoExport = async () => {
     let autoExportEnabled = true;
+    let exportCurrency = 'IDR';
     try {
       const saved = localStorage.getItem('settings');
-      if (saved) autoExportEnabled = JSON.parse(saved).autoExportEnabled !== false;
+      if (saved) {
+        const settings = JSON.parse(saved);
+        autoExportEnabled = settings.autoExportEnabled !== false;
+        exportCurrency = settings.currency || 'IDR';
+      }
     } catch (e) {
       console.error('Error loading settings:', e);
     }
@@ -83,7 +103,7 @@ export default function KeuanganPage() {
       .lte('date', `${lastMonthKey}-31`);
 
     if (data && data.length > 0) {
-      await autoExportMonthly(data, lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1);
+      await autoExportMonthly(data, lastMonthDate.getFullYear(), lastMonthDate.getMonth() + 1, exportCurrency);
       showToast(`Auto-exported ${lastMonthKey} report`, 'info');
     }
     localStorage.setItem('last-auto-export', lastMonthKey);
@@ -217,7 +237,7 @@ export default function KeuanganPage() {
       showToast('No transactions in the selected date range', 'warning');
       return;
     }
-    exportToCSV(filtered, `transactions-${rangeStart}-to-${rangeEnd}.csv`);
+    exportToCSV(filtered, `transactions-${rangeStart}-to-${rangeEnd}.csv`, currency);
     showToast(`${filtered.length} transactions successfully downloaded`, 'success');
     setShowRangeExport(false);
   };
@@ -266,14 +286,14 @@ export default function KeuanganPage() {
           <div className="border-r-2 border-b-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-2">INCOME</div>
             <div className="text-3xl font-black tracking-tighter text-brutal-accent-deep">
-              Rp {totalIncome.toLocaleString('id-ID')}
+              {formatCurrency(totalIncome)}
             </div>
           </div>
 
           <div className="border-r-2 border-b-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-2">EXPENSE</div>
             <div className="text-3xl font-black tracking-tighter text-brutal-red">
-              Rp {totalExpense.toLocaleString('id-ID')}
+              {formatCurrency(totalExpense)}
             </div>
           </div>
 
@@ -282,7 +302,7 @@ export default function KeuanganPage() {
             <div className={`text-3xl font-black tracking-tighter ${
               totalIncome - totalExpense >= 0 ? 'text-brutal-accent-deep' : 'text-brutal-red'
             }`}>
-              Rp {(totalIncome - totalExpense).toLocaleString('id-ID')}
+              {formatCurrency(totalIncome - totalExpense)}
             </div>
           </div>
         </div>
@@ -296,7 +316,7 @@ export default function KeuanganPage() {
               <div key={cat.name} className="mb-4">
                 <div className="flex justify-between font-mono text-xs font-bold mb-1">
                   <span>{cat.name}</span>
-                  <span>Rp {cat.total.toLocaleString('id-ID')}</span>
+                  <span>{formatCurrency(cat.total)}</span>
                 </div>
                 <div className="w-full bg-brutal-bg border border-brutal-fg h-6 relative">
                   <div
@@ -335,7 +355,8 @@ export default function KeuanganPage() {
                 const currentYear = new Date().getFullYear();
                 exportToCSV(
                   transactions,
-                  `financial-report-${currentYear}-${String(currentMonth).padStart(2, '0')}.csv`
+                  `financial-report-${currentYear}-${String(currentMonth).padStart(2, '0')}.csv`,
+                  currency
                 );
                 showToast('CSV file successfully downloaded', 'success');
               }}
@@ -349,7 +370,8 @@ export default function KeuanganPage() {
                 const report = generateMonthlyReport(
                   transactions,
                   new Date().getFullYear(),
-                  new Date().getMonth() + 1
+                  new Date().getMonth() + 1,
+                  currency
                 );
                 const blob = new Blob([report], { type: 'text/plain' });
                 const link = document.createElement('a');
@@ -595,7 +617,7 @@ export default function KeuanganPage() {
                       <div className={`font-black text-lg tracking-tighter ${
                         item.type === 'income' ? 'text-brutal-accent-deep' : 'text-brutal-red'
                       }`}>
-                        {item.type === 'income' ? '+' : '-'} Rp {item.amount.toLocaleString('id-ID')}
+                        {item.type === 'income' ? '+' : '-'} {formatCurrency(item.amount)}
                       </div>
                       <button
                         onClick={() => handleDeleteTransaction(item.id, item.description || item.category)}

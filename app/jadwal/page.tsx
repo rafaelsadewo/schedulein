@@ -55,6 +55,7 @@ export default function JadwalPage() {
   const [submitting, setSubmitting] = useState(false);
   const [recurringSubmitting, setRecurringSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingRecurringId, setDeletingRecurringId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [recurringFormError, setRecurringFormError] = useState('');
   const [expandedRecurring, setExpandedRecurring] = useState<ScheduleItem[]>([]);
@@ -69,6 +70,8 @@ export default function JadwalPage() {
   const [recurringLoaded, setRecurringLoaded] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationMinuteBefore, setNotificationMinuteBefore] = useState(30);
+  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(false);
+  const [notificationEmail, setNotificationEmail] = useState('');
   const supabase = createClient();
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -87,6 +90,8 @@ export default function JadwalPage() {
         setWeekendDays(settings.weekendDays || DEFAULT_WEEKEND_DAYS);
         setNotificationsEnabled(settings.notificationsEnabled !== false);
         setNotificationMinuteBefore(settings.notificationMinuteBefore || 30);
+        setEmailNotificationsEnabled(settings.emailNotificationsEnabled === true);
+        setNotificationEmail(settings.notificationEmail || '');
       } catch (e) {
         console.error('Error loading settings:', e);
       }
@@ -94,21 +99,8 @@ export default function JadwalPage() {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem('recurring-schedules');
-    if (saved) {
-      try {
-        setRecurringSchedules(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error loading recurring schedules:', e);
-      }
-    }
-    setRecurringLoaded(true);
+    fetchRecurringSchedules();
   }, []);
-
-  useEffect(() => {
-    if (!recurringLoaded) return;
-    localStorage.setItem('recurring-schedules', JSON.stringify(recurringSchedules));
-  }, [recurringSchedules, recurringLoaded]);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -140,11 +132,13 @@ export default function JadwalPage() {
       );
       const todaysAll = [...(data || []), ...todaysRecurring];
 
+      const emailAddress = emailNotificationsEnabled && notificationEmail ? notificationEmail : undefined;
+
       todaysAll
         .filter((item) => item.start_time > nowTime)
         .forEach((item) => {
           cleanups.push(
-            setupScheduleNotification(item.title, item.start_time, notificationMinuteBefore)
+            setupScheduleNotification(item.title, item.start_time, notificationMinuteBefore, emailAddress)
           );
         });
     };
@@ -155,11 +149,29 @@ export default function JadwalPage() {
       cancelled = true;
       cleanups.forEach((fn) => fn());
     };
-  }, [schedules, recurringSchedules, recurringLoaded, notificationsEnabled, notificationMinuteBefore]);
+  }, [
+    schedules,
+    recurringSchedules,
+    recurringLoaded,
+    notificationsEnabled,
+    notificationMinuteBefore,
+    emailNotificationsEnabled,
+    notificationEmail,
+  ]);
 
   useEffect(() => {
     if (viewMode === 'week') fetchWeekSchedules();
   }, [viewMode, selectedDate]);
+
+  const fetchRecurringSchedules = async () => {
+    try {
+      const { data, error } = await supabase.from('recurring_schedules').select('*');
+      if (error) console.error(error);
+      else setRecurringSchedules(data || []);
+    } finally {
+      setRecurringLoaded(true);
+    }
+  };
 
   const fetchSchedules = async () => {
     setLoading(true);
@@ -294,25 +306,32 @@ export default function JadwalPage() {
     setRecurringSubmitting(true);
 
     try {
-      const newRecurring: RecurringSchedule = {
-        id: `recurring-${Date.now()}`,
-        title: recurringTitle,
-        start_time: recurringStartTime,
-        end_time: recurringEndTime,
-        recurrence_type: 'weekly',
-        days_of_week: selectedDaysOfWeek,
-        notes: recurringNotes,
-      };
+      const { error } = await supabase
+        .from('recurring_schedules')
+        .insert([
+          {
+            title: recurringTitle,
+            start_time: recurringStartTime,
+            end_time: recurringEndTime,
+            recurrence_type: 'weekly',
+            days_of_week: selectedDaysOfWeek,
+            notes: recurringNotes || null,
+          },
+        ]);
 
-      setRecurringSchedules([...recurringSchedules, newRecurring]);
-
-      setRecurringTitle('');
-      setRecurringStartTime('09:00');
-      setRecurringEndTime('17:00');
-      setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
-      setRecurringNotes('');
-      setShowRecurringForm(false);
-      showToast(`Recurring "${recurringTitle}" successfully added!`, 'success');
+      if (error) {
+        console.error(error);
+        showToast('Failed to add recurring schedule', 'error');
+      } else {
+        setRecurringTitle('');
+        setRecurringStartTime('09:00');
+        setRecurringEndTime('17:00');
+        setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
+        setRecurringNotes('');
+        setShowRecurringForm(false);
+        fetchRecurringSchedules();
+        showToast(`Recurring "${recurringTitle}" successfully added!`, 'success');
+      }
     } finally {
       setRecurringSubmitting(false);
     }
@@ -371,9 +390,24 @@ export default function JadwalPage() {
     }
   };
 
-  const handleDeleteRecurring = (id: string, title: string) => {
-    setRecurringSchedules(recurringSchedules.filter((r) => r.id !== id));
-    showToast(`Recurring "${title}" successfully deleted`, 'info');
+  const handleDeleteRecurring = async (id: string, title: string) => {
+    setDeletingRecurringId(id);
+    try {
+      const { error } = await supabase
+        .from('recurring_schedules')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error(error);
+        showToast('Failed to delete recurring schedule', 'error');
+      } else {
+        fetchRecurringSchedules();
+        showToast(`Recurring "${title}" successfully deleted`, 'info');
+      }
+    } finally {
+      setDeletingRecurringId(null);
+    }
   };
 
   const handleDailyTabClick = () => {
@@ -747,9 +781,10 @@ export default function JadwalPage() {
                           handleDeleteRecurring(recurring.id, recurring.title);
                         }
                       }}
-                      className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg whitespace-nowrap"
+                      disabled={deletingRecurringId === recurring.id}
+                      className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg whitespace-nowrap disabled:opacity-50"
                     >
-                      DELETE
+                      {deletingRecurringId === recurring.id ? '...' : 'DELETE'}
                     </button>
                   </div>
                 </div>

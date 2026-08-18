@@ -9,10 +9,22 @@ export interface Transaction {
   date: string;
 }
 
+function formatMoney(amount: number, currency: string): string {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
 /**
  * Export transactions to CSV
  */
-export function exportToCSV(transactions: Transaction[], filename: string = 'transactions.csv') {
+export function exportToCSV(
+  transactions: Transaction[],
+  filename: string = 'transactions.csv',
+  currency: string = 'IDR'
+) {
   const headers = ['Date', 'Type', 'Category', 'Description', 'Amount'];
 
   const rows = transactions.map((t) => [
@@ -20,7 +32,7 @@ export function exportToCSV(transactions: Transaction[], filename: string = 'tra
     t.type === 'income' ? 'INCOME' : 'EXPENSE',
     t.category,
     t.description || '-',
-    `Rp ${t.amount.toLocaleString('id-ID')}`,
+    formatMoney(t.amount, currency),
   ]);
 
   const csv = [
@@ -59,7 +71,8 @@ function downloadFile(content: string, filename: string, type: string) {
 export function generateMonthlyReport(
   transactions: Transaction[],
   year: number,
-  month: number
+  month: number,
+  currency: string = 'IDR'
 ): string {
   const monthName = format(new Date(year, month - 1), 'MMMM yyyy');
   const monthStart = new Date(year, month - 1, 1);
@@ -95,19 +108,19 @@ export function generateMonthlyReport(
   let report = `FINANCIAL REPORT - ${monthName.toUpperCase()}\n`;
   report += `${'='.repeat(50)}\n\n`;
   report += `SUMMARY:\n`;
-  report += `Total Income    : Rp ${income.toLocaleString('id-ID')}\n`;
-  report += `Total Expense   : Rp ${expense.toLocaleString('id-ID')}\n`;
-  report += `Balance          : Rp ${(income - expense).toLocaleString('id-ID')}\n\n`;
+  report += `Total Income    : ${formatMoney(income, currency)}\n`;
+  report += `Total Expense   : ${formatMoney(expense, currency)}\n`;
+  report += `Balance          : ${formatMoney(income - expense, currency)}\n\n`;
 
   report += `EXPENSE BY CATEGORY:\n`;
   expenseByCategory.forEach((cat) => {
-    report += `  ${cat.category}: Rp ${cat.total.toLocaleString('id-ID')} (${cat.percentage}%)\n`;
+    report += `  ${cat.category}: ${formatMoney(cat.total, currency)} (${cat.percentage}%)\n`;
   });
 
   report += `\nTRANSACTION DETAILS:\n`;
   report += `${'-'.repeat(50)}\n`;
   filtered.forEach((t) => {
-    report += `${t.date} | ${t.type === 'income' ? '+' : '-'} Rp ${t.amount.toLocaleString('id-ID')} | ${t.category} | ${t.description || '-'}\n`;
+    report += `${t.date} | ${t.type === 'income' ? '+' : '-'} ${formatMoney(t.amount, currency)} | ${t.category} | ${t.description || '-'}\n`;
   });
 
   return report;
@@ -120,10 +133,11 @@ export function generateMonthlyReport(
 export async function autoExportMonthly(
   transactions: Transaction[],
   year: number,
-  month: number
+  month: number,
+  currency: string = 'IDR'
 ) {
   const monthName = format(new Date(year, month - 1), 'yyyy-MM');
-  const report = generateMonthlyReport(transactions, year, month);
+  const report = generateMonthlyReport(transactions, year, month, currency);
   downloadFile(report, `financial-report-${monthName}.txt`, 'text/plain;charset=utf-8;');
 }
 

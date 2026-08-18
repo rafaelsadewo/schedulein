@@ -35,6 +35,8 @@ export default function SettingsPage() {
   const [weekendDays, setWeekendDays] = useState<number[]>([0, 6]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationMinuteBefore, setNotificationMinuteBefore] = useState(30);
+  const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(false);
+  const [notificationEmail, setNotificationEmail] = useState('');
   const [autoExportEnabled, setAutoExportEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
 
@@ -50,6 +52,8 @@ export default function SettingsPage() {
         setWeekendDays(settings.weekendDays || [0, 6]);
         setNotificationsEnabled(settings.notificationsEnabled !== false);
         setNotificationMinuteBefore(settings.notificationMinuteBefore || 30);
+        setEmailNotificationsEnabled(settings.emailNotificationsEnabled === true);
+        setNotificationEmail(settings.notificationEmail || '');
         setAutoExportEnabled(settings.autoExportEnabled !== false);
       } catch (e) {
         console.error('Error loading settings:', e);
@@ -75,6 +79,8 @@ export default function SettingsPage() {
         weekendDays,
         notificationsEnabled,
         notificationMinuteBefore,
+        emailNotificationsEnabled,
+        notificationEmail,
         autoExportEnabled,
       };
 
@@ -233,6 +239,38 @@ export default function SettingsPage() {
                   </p>
                 </div>
               )}
+
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailNotificationsEnabled}
+                    onChange={(e) => setEmailNotificationsEnabled(e.target.checked)}
+                    className="w-5 h-5 border-2 border-brutal-fg cursor-pointer"
+                  />
+                  <span className="font-mono text-sm font-bold">
+                    ALSO SEND EMAIL REMINDERS (OPTIONAL)
+                  </span>
+                </label>
+                <p className="font-mono text-xs text-brutal-fg mt-2 opacity-70">
+                  Requires a RESEND_API_KEY configured on the server - does nothing otherwise
+                </p>
+              </div>
+
+              {emailNotificationsEnabled && (
+                <div>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">
+                    REMINDER EMAIL ADDRESS
+                  </label>
+                  <input
+                    type="email"
+                    value={notificationEmail}
+                    onChange={(e) => setNotificationEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-3 font-mono text-sm"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -277,7 +315,8 @@ export default function SettingsPage() {
             <p>Schedulein v1.0 - Personal Schedule & Finance Tracker</p>
             <p className="mt-2">Made by Rafael</p>
             <p className="mt-4 opacity-70">
-              Settings are saved locally in your browser. Not sent to any server.
+              Settings are saved locally in your browser. If email reminders are enabled,
+              your reminder email address is sent to the server only to send that reminder.
             </p>
           </div>
         </div>

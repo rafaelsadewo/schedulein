@@ -77,7 +77,8 @@ export function shouldNotify(scheduleTime: string, minutesBefore: number): boole
 export function setupScheduleNotification(
   scheduleTitle: string,
   scheduleTime: string,
-  minutesBefore: number = 30
+  minutesBefore: number = 30,
+  emailAddress?: string
 ): () => void {
   const interval = setInterval(() => {
     if (shouldNotify(scheduleTime, minutesBefore)) {
@@ -85,6 +86,13 @@ export function setupScheduleNotification(
         body: `Schedule "${scheduleTitle}" starts at ${scheduleTime}`,
         tag: `schedule-${scheduleTitle}-${scheduleTime}`,
       });
+      if (emailAddress) {
+        sendEmailNotification(
+          emailAddress,
+          `Reminder: ${scheduleTitle}`,
+          `Your schedule "${scheduleTitle}" starts at ${scheduleTime}.`
+        );
+      }
       clearInterval(interval);
     }
   }, 60 * 1000); // Check every minute
