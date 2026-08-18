@@ -3,15 +3,9 @@
 :root {
   --bg: #F4F4F0;
   --fg: #050505;
-  --accent: #B5C99A;
   --red: #E61919;
   --border: 1px solid var(--fg);
   --border-thick: 2px solid var(--fg);
-}
-
-.dark {
-  --bg: #0A0A0A;
-  --fg: #EAEAEA;
 }
 
 * {
@@ -90,8 +84,8 @@ button {
 }
 
 button:hover {
-  background: var(--accent);
-  color: var(--fg);
+  background: var(--red);
+  color: var(--bg);
 }
 
 button:active {
@@ -146,7 +140,8 @@ a {
 }
 
 a:hover {
-  background: var(--accent);
+  background: var(--red);
+  color: var(--bg);
 }
 
 /* ASCII frame */
@@ -176,14 +171,4 @@ a:hover {
   border-bottom: var(--border);
   padding: 1rem;
   background: #FFF5F5;
-}
-
-/* Success styling */
-.success {
-  border-left: 4px solid var(--accent);
-  border-right: var(--border);
-  border-top: var(--border);
-  border-bottom: var(--border);
-  padding: 1rem;
-  background: #F8FAF6;
 }

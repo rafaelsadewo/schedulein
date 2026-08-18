@@ -349,7 +349,7 @@ export default function JadwalPage() {
           <div className="flex gap-4 items-center justify-between mb-6">
             <button
               onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? -7 : -1))}
-              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg"
+              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-red hover:border-brutal-red"
             >
               &lt; PREV
             </button>
@@ -366,7 +366,7 @@ export default function JadwalPage() {
                     </div>
                   )}
                   {!isWorking && !holiday && (
-                    <div className="font-mono text-xs text-brutal-accent mt-2 font-bold">
+                    <div className="font-mono text-xs text-brutal-red mt-2 font-bold">
                       (WEEKEND)
                     </div>
                   )}
@@ -380,7 +380,7 @@ export default function JadwalPage() {
 
             <button
               onClick={() => setSelectedDate(addDays(selectedDate, viewMode === 'week' ? 7 : 1))}
-              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-accent hover:text-brutal-fg"
+              className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg px-4 py-2 font-bold uppercase text-sm tracking-tight hover:bg-brutal-red hover:border-brutal-red"
             >
               NEXT &gt;
             </button>
@@ -392,8 +392,8 @@ export default function JadwalPage() {
               onClick={() => setViewMode('day')}
               className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm border-r-2 border-brutal-fg ${
                 viewMode === 'day'
-                  ? 'bg-brutal-accent text-brutal-fg'
-                  : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
+                  ? 'bg-brutal-red text-brutal-bg'
+                  : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-red hover:text-brutal-bg'
               }`}
             >
               Day View
@@ -402,8 +402,8 @@ export default function JadwalPage() {
               onClick={() => setViewMode('week')}
               className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm ${
                 viewMode === 'week'
-                  ? 'bg-brutal-accent text-brutal-fg'
-                  : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
+                  ? 'bg-brutal-red text-brutal-bg'
+                  : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-red hover:text-brutal-bg'
               }`}
             >
               Week View
@@ -419,7 +419,7 @@ export default function JadwalPage() {
                   className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm border-r-2 border-brutal-fg ${
                     tab === 'daily'
                       ? 'bg-brutal-fg text-brutal-bg'
-                      : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
+                      : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-red hover:text-brutal-bg'
                   }`}
                 >
                   Daily Schedule
@@ -429,7 +429,7 @@ export default function JadwalPage() {
                   className={`flex-1 py-2 font-bold uppercase tracking-tight text-sm ${
                     tab === 'recurring'
                       ? 'bg-brutal-fg text-brutal-bg'
-                      : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-accent'
+                      : 'bg-brutal-bg text-brutal-fg hover:bg-brutal-red hover:text-brutal-bg'
                   }`}
                 >
                   Recurring
@@ -439,7 +439,7 @@ export default function JadwalPage() {
               {tab === 'daily' && (
                 <button
                   onClick={() => setShowForm(!showForm)}
-                  className="w-full bg-brutal-accent text-brutal-fg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg"
+                  className="w-full bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:border-brutal-fg"
                 >
                   {showForm ? '[ CLOSE FORM ]' : '[ ADD SCHEDULE ]'}
                 </button>
@@ -448,7 +448,7 @@ export default function JadwalPage() {
               {tab === 'recurring' && (
                 <button
                   onClick={() => setShowRecurringForm(!showRecurringForm)}
-                  className="w-full bg-brutal-accent text-brutal-fg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg"
+                  className="w-full bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:border-brutal-fg"
                 >
                   {showRecurringForm ? '[ CLOSE FORM ]' : '[ ADD RECURRING ]'}
                 </button>
@@ -518,7 +518,7 @@ export default function JadwalPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
+                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-red hover:border-brutal-red disabled:opacity-50"
                 >
                   {submitting ? 'SAVING...' : 'SAVE'}
                 </button>
@@ -586,8 +586,8 @@ export default function JadwalPage() {
                       onClick={() => toggleDayOfWeek(day as DayOfWeek)}
                       className={`p-1.5 sm:p-3 font-bold text-[10px] sm:text-xs border-2 transition-all ${
                         selectedDaysOfWeek.includes(day as DayOfWeek)
-                          ? 'bg-brutal-accent text-brutal-fg border-brutal-accent ring-2 ring-brutal-accent ring-offset-2'
-                          : 'bg-brutal-bg text-brutal-fg border-brutal-fg hover:border-brutal-accent'
+                          ? 'bg-brutal-red text-brutal-bg border-brutal-red ring-2 ring-brutal-red ring-offset-2'
+                          : 'bg-brutal-bg text-brutal-fg border-brutal-fg hover:border-brutal-red'
                       }`}
                     >
                       {getDayAbbr(day)}
@@ -596,7 +596,7 @@ export default function JadwalPage() {
                 </div>
 
                 {/* Selected Days Display */}
-                <div className="border-2 border-brutal-fg p-3 bg-brutal-accent text-brutal-fg">
+                <div className="border-2 border-brutal-red p-3 bg-brutal-red text-brutal-bg">
                   <div className="font-mono text-xs font-bold tracking-wider mb-2">SELECTED DAYS:</div>
                   {selectedDaysOfWeek.length === 0 ? (
                     <div className="font-mono text-xs italic">No days selected yet</div>
@@ -631,7 +631,7 @@ export default function JadwalPage() {
                 <button
                   type="submit"
                   disabled={recurringSubmitting}
-                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
+                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-red hover:border-brutal-red disabled:opacity-50"
                 >
                   {recurringSubmitting ? 'SAVING...' : 'SAVE'}
                 </button>
@@ -660,7 +660,7 @@ export default function JadwalPage() {
 
             <div className="space-y-3">
               {recurringSchedules.map((recurring) => (
-                <div key={recurring.id} className="border-2 border-brutal-fg p-4 hover:bg-brutal-accent hover:text-brutal-fg">
+                <div key={recurring.id} className="border-2 border-brutal-fg p-4 hover:border-brutal-red">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
                       <h3 className="font-black text-lg mb-2 tracking-tighter uppercase">
@@ -669,7 +669,7 @@ export default function JadwalPage() {
                       <div className="font-mono text-xs tracking-wider mb-2">
                         ◆ {recurring.start_time} → {recurring.end_time}
                       </div>
-                      <div className="font-mono text-xs text-brutal-accent font-bold">
+                      <div className="font-mono text-xs text-brutal-red font-bold">
                         ▪ {formatRecurrence(recurring).toUpperCase()}
                       </div>
                       {recurring.notes && (
@@ -728,20 +728,20 @@ export default function JadwalPage() {
           {loading ? (
             <div className="font-mono text-sm text-brutal-fg">◆ LOADING...</div>
           ) : allSchedules.length === 0 ? (
-            <div className="bg-brutal-accent text-brutal-fg p-4 font-mono text-xs leading-relaxed">
+            <div className="bg-brutal-red text-brutal-bg p-4 font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">▲ NO SCHEDULE FOUND</div>
               <div>No schedule found for {format(selectedDate, 'dd MMMM yyyy')}.</div>
               <div className="mt-2">Click [ ADD SCHEDULE ] or [ ADD RECURRING ] to get started.</div>
             </div>
           ) : filteredSchedules.length === 0 ? (
-            <div className="bg-brutal-accent text-brutal-fg p-4 font-mono text-xs leading-relaxed">
+            <div className="bg-brutal-red text-brutal-bg p-4 font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">▲ NO MATCHES</div>
               <div>No schedule items match your search.</div>
             </div>
           ) : (
             <div className="space-y-3">
               {filteredSchedules.map((item) => (
-                <div key={item.id} className="border-2 border-brutal-fg p-4 hover:bg-brutal-accent hover:text-brutal-fg transition-colors">
+                <div key={item.id} className="border-2 border-brutal-fg p-4 hover:border-brutal-red transition-colors">
                   <div className="flex justify-between items-start gap-3">
                     {!item.id.includes('recurring') && (
                       <input
@@ -798,7 +798,7 @@ export default function JadwalPage() {
                     <div
                       key={idx}
                       className={`border-brutal-fg p-3 md:border-r-2 border-b-2 md:border-b-0 last:border-r-0 ${
-                        isToday ? 'bg-brutal-accent/20' : ''
+                        isToday ? 'bg-brutal-red/10' : ''
                       }`}
                     >
                       <button
@@ -806,7 +806,7 @@ export default function JadwalPage() {
                           setSelectedDate(day);
                           setViewMode('day');
                         }}
-                        className="w-full text-left mb-3 border-b-2 border-brutal-fg pb-2 hover:text-brutal-accent"
+                        className="w-full text-left mb-3 border-b-2 border-brutal-fg pb-2 hover:text-brutal-red"
                       >
                         <div className="font-mono text-xs font-bold tracking-wider">
                           {format(day, 'EEE').toUpperCase()}
@@ -818,7 +818,7 @@ export default function JadwalPage() {
                           <div className="font-mono text-[10px] text-brutal-red font-bold mt-1">▲ HOLIDAY</div>
                         )}
                         {!dayWorking && !dayHoliday && (
-                          <div className="font-mono text-[10px] text-brutal-accent font-bold mt-1">WEEKEND</div>
+                          <div className="font-mono text-[10px] text-brutal-red font-bold mt-1">WEEKEND</div>
                         )}
                       </button>
 

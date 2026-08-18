@@ -11,7 +11,6 @@ const config: Config = {
         brutal: {
           bg: 'var(--bg)',
           fg: 'var(--fg)',
-          'accent': '#B5C99A',
           'red': '#E61919',
         },
       },

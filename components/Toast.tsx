@@ -28,10 +28,10 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   }, [duration, onClose]);
 
   const bgColor = {
-    success: 'bg-brutal-accent text-brutal-fg border-brutal-accent',
+    success: 'bg-brutal-fg text-brutal-bg border-brutal-fg',
     error: 'bg-brutal-red text-brutal-bg border-brutal-red',
-    info: 'bg-brutal-fg text-brutal-bg border-brutal-fg',
-    warning: 'bg-yellow-400 text-brutal-fg border-yellow-400',
+    info: 'bg-brutal-bg text-brutal-fg border-brutal-fg',
+    warning: 'bg-brutal-bg text-brutal-red border-brutal-red',
   };
 
   const icon = {

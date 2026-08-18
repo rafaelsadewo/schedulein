@@ -77,11 +77,11 @@ export default function RegisterPage() {
                 × {error.toUpperCase()}
               </div>
             ) : success ? (
-              <div className="text-brutal-accent text-xs font-bold tracking-wide">
+              <div className="text-brutal-fg text-xs font-bold tracking-wide">
                 ✓ {success}
               </div>
             ) : (
-              <div className="text-brutal-accent text-xs font-bold tracking-wide">
+              <div className="text-brutal-fg text-xs font-bold tracking-wide">
                 ◆ Complete form to register
               </div>
             )}
@@ -134,7 +134,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg disabled:opacity-50"
+            className="w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-red hover:border-brutal-red disabled:opacity-50"
           >
             {loading ? 'REGISTERING' : 'REGISTER'}
           </button>
@@ -144,7 +144,7 @@ export default function RegisterPage() {
 
         <div className="text-center font-mono text-xs tracking-wider">
           <div className="mb-2 text-brutal-fg">HAVE ACCOUNT?</div>
-          <Link href="/login" className="text-brutal-accent font-bold hover:bg-brutal-accent hover:text-brutal-fg px-2">
+          <Link href="/login" className="text-brutal-red font-bold hover:bg-brutal-red hover:text-brutal-bg px-2">
             &gt;&gt; LOGIN &lt;&lt;
           </Link>
         </div>
