@@ -35,19 +35,19 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   };
 
   const icon = {
-    success: '✓',
-    error: '✕',
-    info: 'ℹ',
-    warning: '!',
+    success: '[OK]',
+    error: '[ERR]',
+    info: '[>>]',
+    warning: '[!]',
   };
 
   return (
     <div
-      className={`fixed top-4 right-4 border-2 ${bgColor[type]} px-6 py-4 font-mono text-sm font-bold tracking-tight z-50 animate-pulse`}
+      className={`fixed top-4 right-4 border-2 ${bgColor[type]} px-6 py-4 font-mono text-xs font-bold tracking-wide z-50`}
     >
-      <div className="flex items-center gap-2">
-        <span className="text-xl">{icon[type]}</span>
-        <span>{message}</span>
+      <div className="flex items-center gap-3">
+        <span className="font-bold">{icon[type]}</span>
+        <span>{message.toUpperCase()}</span>
       </div>
     </div>
   );

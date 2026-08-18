@@ -60,9 +60,12 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light">
       <div className="w-full max-w-md border-2 border-brutal-fg-light p-8">
-        <h1 className="text-4xl font-black text-center mb-12 tracking-tighter">
+        <h1 className="text-4xl font-black text-center mb-2 tracking-tighter">
           [ SCHEDULEIN ]
         </h1>
+        <p className="text-center font-mono text-xs text-brutal-fg-light mb-8 opacity-70">
+          DAFTAR AKUN BARU UNTUK MEMULAI
+        </p>
 
         <div className="mb-8 border-2 border-brutal-fg-light p-4">
           <div className="font-mono text-xs tracking-wider text-brutal-fg-light uppercase mb-2">
@@ -71,15 +74,15 @@ export default function RegisterPage() {
           <div className="border-t-2 border-brutal-fg-light pt-2">
             {error ? (
               <div className="text-brutal-red text-xs font-bold tracking-wide">
-                ERROR: {error.toUpperCase()}
+                [ERR] {error.toUpperCase()}
               </div>
             ) : success ? (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                SUCCESS: {success}
+                [OK] {success}
               </div>
             ) : (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                READY
+                [>>] ISI FORM UNTUK DAFTAR
               </div>
             )}
           </div>
