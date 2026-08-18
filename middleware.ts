@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Bypass middleware untuk public routes
+  // Bypass middleware for public routes
   if (pathname === '/login' || pathname === '/register') {
     return NextResponse.next();
   }

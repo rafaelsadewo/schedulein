@@ -81,7 +81,7 @@ export function setupScheduleNotification(
 ): () => void {
   const interval = setInterval(() => {
     if (shouldNotify(scheduleTime, minutesBefore)) {
-      sendNotification(`⏰ Reminder: ${scheduleTitle}`, {
+      sendNotification(`Reminder: ${scheduleTitle}`, {
         body: `Schedule "${scheduleTitle}" starts at ${scheduleTime}`,
         tag: `schedule-${scheduleTitle}-${scheduleTime}`,
       });

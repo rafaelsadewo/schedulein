@@ -17,7 +17,7 @@ export function exportToCSV(transactions: Transaction[], filename: string = 'tra
 
   const rows = transactions.map((t) => [
     t.date,
-    t.type === 'income' ? 'PEMASUKAN' : 'PENGELUARAN',
+    t.type === 'income' ? 'INCOME' : 'EXPENSE',
     t.category,
     t.description || '-',
     `Rp ${t.amount.toLocaleString('id-ID')}`,
@@ -92,19 +92,19 @@ export function generateMonthlyReport(
     percentage: ((total / expense) * 100).toFixed(1),
   }));
 
-  let report = `LAPORAN KEUANGAN - ${monthName.toUpperCase()}\n`;
+  let report = `FINANCIAL REPORT - ${monthName.toUpperCase()}\n`;
   report += `${'='.repeat(50)}\n\n`;
-  report += `RINGKASAN:\n`;
+  report += `SUMMARY:\n`;
   report += `Total Income    : Rp ${income.toLocaleString('id-ID')}\n`;
   report += `Total Expense   : Rp ${expense.toLocaleString('id-ID')}\n`;
-  report += `Sisa             : Rp ${(income - expense).toLocaleString('id-ID')}\n\n`;
+  report += `Balance          : Rp ${(income - expense).toLocaleString('id-ID')}\n\n`;
 
-  report += `PENGELUARAN PER KATEGORI:\n`;
+  report += `EXPENSE BY CATEGORY:\n`;
   expenseByCategory.forEach((cat) => {
     report += `  ${cat.category}: Rp ${cat.total.toLocaleString('id-ID')} (${cat.percentage}%)\n`;
   });
 
-  report += `\nDETAIL TRANSAKSI:\n`;
+  report += `\nTRANSACTION DETAILS:\n`;
   report += `${'-'.repeat(50)}\n`;
   filtered.forEach((t) => {
     report += `${t.date} | ${t.type === 'income' ? '+' : '-'} Rp ${t.amount.toLocaleString('id-ID')} | ${t.category} | ${t.description || '-'}\n`;
@@ -124,7 +124,7 @@ export async function autoExportMonthly(
 ) {
   const monthName = format(new Date(year, month - 1), 'yyyy-MM');
   const report = generateMonthlyReport(transactions, year, month);
-  downloadFile(report, `laporan-keuangan-${monthName}.txt`, 'text/plain;charset=utf-8;');
+  downloadFile(report, `financial-report-${monthName}.txt`, 'text/plain;charset=utf-8;');
 }
 
 /**

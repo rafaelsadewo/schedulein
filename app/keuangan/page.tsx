@@ -136,7 +136,7 @@ export default function KeuanganPage() {
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
-        <h1 className="text-5xl font-black mb-12 tracking-tighter">KEUANGAN BULANAN</h1>
+        <h1 className="text-5xl font-black mb-12 tracking-tighter">MONTHLY FINANCE</h1>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mb-12 border-2 border-brutal-fg-light">
@@ -375,8 +375,8 @@ export default function KeuanganPage() {
           ) : transactions.length === 0 ? (
             <div className="p-6 bg-brutal-accent text-brutal-fg-light font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">[!] NO TRANSACTIONS FOUND</div>
-              <div>Belum ada transaksi di bulan ini.</div>
-              <div className="mt-2">Klik tombol [ ADD TRANSACTION ] untuk mulai catat pengeluaran atau pemasukan.</div>
+              <div>No transactions found for this month.</div>
+              <div className="mt-2">Click [ ADD TRANSACTION ] to start tracking your income or expenses.</div>
             </div>
           ) : (
             <div>

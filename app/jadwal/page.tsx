@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { format, addDays, eachDayOfInterval } from 'date-fns';
-import { id } from 'date-fns/locale';
 import Navbar from '@/components/Navbar';
 import { ToastContainer, useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase';
@@ -201,7 +200,7 @@ export default function JadwalPage() {
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <main className="max-w-5xl mx-auto px-8 py-12 border-l-2 border-r-2 border-brutal-fg-light">
-        <h1 className="text-5xl font-black mb-12 tracking-tighter">JADWAL</h1>
+        <h1 className="text-5xl font-black mb-12 tracking-tighter">SCHEDULE</h1>
 
         {/* Date Navigation */}
         <div className="mb-12 border-2 border-brutal-fg-light p-6">
@@ -219,11 +218,11 @@ export default function JadwalPage() {
 
             <div className="flex-1 text-center">
               <div className="font-mono font-bold text-lg tracking-tight">
-                {format(selectedDate, 'EEEE, dd MMM yyyy', { locale: id }).toUpperCase()}
+                {format(selectedDate, 'EEEE, dd MMM yyyy').toUpperCase()}
               </div>
               {holiday && (
                 <div className="font-mono text-xs text-brutal-red mt-2 font-bold">
-                  🎌 {holiday.name.toUpperCase()}
+                  ▲ {holiday.name.toUpperCase()}
                 </div>
               )}
               {!isWorking && !holiday && (
@@ -418,7 +417,7 @@ export default function JadwalPage() {
                 <div className="border-2 border-brutal-fg-light p-3 bg-brutal-accent text-brutal-fg-light">
                   <div className="font-mono text-xs font-bold tracking-wider mb-2">HARI TERPILIH:</div>
                   {selectedDaysOfWeek.length === 0 ? (
-                    <div className="font-mono text-xs italic">Belum ada hari yang dipilih</div>
+                    <div className="font-mono text-xs italic">No days selected yet</div>
                   ) : (
                     <div className="font-mono text-sm font-bold">
                       {selectedDaysOfWeek.map((day) => getDayNameId(day)).join(' • ')}
@@ -466,7 +465,7 @@ export default function JadwalPage() {
               DATA / RECURRING SCHEDULES ({recurringSchedules.length})
             </div>
             <div className="font-mono text-xs text-brutal-fg-light mb-6">
-              Klik HAPUS untuk menghapus recurring schedule
+              Click DELETE to remove a recurring schedule
             </div>
 
             <div className="space-y-3">
@@ -478,10 +477,10 @@ export default function JadwalPage() {
                         {recurring.title}
                       </h3>
                       <div className="font-mono text-xs tracking-wider mb-2">
-                        ⏰ {recurring.start_time} → {recurring.end_time}
+                        ◆ {recurring.start_time} → {recurring.end_time}
                       </div>
                       <div className="font-mono text-xs text-brutal-accent font-bold">
-                        📅 {formatRecurrence(recurring).toUpperCase()}
+                        ▪ {formatRecurrence(recurring).toUpperCase()}
                       </div>
                       {recurring.notes && (
                         <div className="font-mono text-xs text-gray-700 mt-2 italic">{recurring.notes}</div>
@@ -495,7 +494,7 @@ export default function JadwalPage() {
                       }}
                       className="bg-brutal-red text-brutal-bg-light border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg-light hover:text-brutal-bg-light whitespace-nowrap"
                     >
-                      HAPUS
+                      DELETE
                     </button>
                   </div>
                 </div>
@@ -515,8 +514,8 @@ export default function JadwalPage() {
           ) : allSchedules.length === 0 ? (
             <div className="bg-brutal-accent text-brutal-fg-light p-4 font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">[!] NO SCHEDULE FOUND</div>
-              <div>Belum ada jadwal untuk {format(selectedDate, 'dd MMMM yyyy', { locale: id })}.</div>
-              <div className="mt-2">Klik tombol [ ADD SCHEDULE ] atau [ ADD RECURRING ] untuk mulai.</div>
+              <div>No schedule found for {format(selectedDate, 'dd MMMM yyyy')}.</div>
+              <div className="mt-2">Click [ ADD SCHEDULE ] or [ ADD RECURRING ] to get started.</div>
             </div>
           ) : (
             <div className="space-y-3">
