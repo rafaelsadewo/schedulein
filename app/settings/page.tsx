@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import { ToastContainer, useToast } from '@/components/Toast';
+import type { Country } from '@/lib/indonesian-holidays';
+
+const COUNTRIES: { value: Country; label: string }[] = [
+  { value: 'ID', label: 'Indonesia' },
+  { value: 'NONE', label: 'None (no holiday calendar)' },
+];
+
+const WEEKDAY_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const TIMEZONES = [
   'Asia/Jakarta',
@@ -23,6 +31,8 @@ export default function SettingsPage() {
   const { toasts, showToast, removeToast } = useToast();
   const [timezone, setTimezone] = useState('Asia/Jakarta');
   const [currency, setCurrency] = useState('IDR');
+  const [country, setCountry] = useState<Country>('ID');
+  const [weekendDays, setWeekendDays] = useState<number[]>([0, 6]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationMinuteBefore, setNotificationMinuteBefore] = useState(30);
   const [autoExportEnabled, setAutoExportEnabled] = useState(true);
@@ -36,6 +46,8 @@ export default function SettingsPage() {
         const settings = JSON.parse(saved);
         setTimezone(settings.timezone || 'Asia/Jakarta');
         setCurrency(settings.currency || 'IDR');
+        setCountry(settings.country || 'ID');
+        setWeekendDays(settings.weekendDays || [0, 6]);
         setNotificationsEnabled(settings.notificationsEnabled !== false);
         setNotificationMinuteBefore(settings.notificationMinuteBefore || 30);
         setAutoExportEnabled(settings.autoExportEnabled !== false);
@@ -45,6 +57,12 @@ export default function SettingsPage() {
     }
   }, []);
 
+  const toggleWeekendDay = (day: number) => {
+    setWeekendDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+    );
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -53,6 +71,8 @@ export default function SettingsPage() {
       const settings = {
         timezone,
         currency,
+        country,
+        weekendDays,
         notificationsEnabled,
         notificationMinuteBefore,
         autoExportEnabled,
@@ -97,6 +117,56 @@ export default function SettingsPage() {
               </select>
               <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
                 Used for notifications & timestamps in reports
+              </p>
+            </div>
+          </div>
+
+          {/* Region Section */}
+          <div className="border-2 border-brutal-fg-light p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">REGION / HOLIDAYS</div>
+
+            <div className="mb-6">
+              <label className="block font-mono text-xs font-bold tracking-wider mb-2">
+                COUNTRY
+              </label>
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value as Country)}
+                className="w-full bg-brutal-bg-light text-brutal-fg-light border-2 border-brutal-fg-light p-3 font-mono text-sm"
+              >
+                {COUNTRIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+                Determines which national holidays are shown on the schedule page
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-mono text-xs font-bold tracking-wider mb-2">
+                WEEKEND DAYS
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {WEEKDAY_LABELS.map((label, day) => (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => toggleWeekendDay(day)}
+                    className={`px-4 py-2 border-2 border-brutal-fg-light font-mono text-xs font-bold ${
+                      weekendDays.includes(day)
+                        ? 'bg-brutal-fg-light text-brutal-bg-light'
+                        : 'bg-brutal-bg-light text-brutal-fg-light'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="font-mono text-xs text-brutal-fg-light mt-2 opacity-70">
+                Days treated as non-working days (e.g. uncheck SAT if you work Saturdays)
               </p>
             </div>
           </div>

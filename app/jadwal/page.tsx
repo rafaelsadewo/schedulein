@@ -5,7 +5,7 @@ import { format, addDays, eachDayOfInterval } from 'date-fns';
 import Navbar from '@/components/Navbar';
 import { ToastContainer, useToast } from '@/components/Toast';
 import { createClient } from '@/lib/supabase';
-import { getHoliday, isWorkingDay } from '@/lib/indonesian-holidays';
+import { getHoliday, isWorkingDay, DEFAULT_WEEKEND_DAYS, type Country } from '@/lib/indonesian-holidays';
 import {
   expandRecurringSchedule,
   formatRecurrence,
@@ -52,11 +52,26 @@ export default function JadwalPage() {
 
   const [loading, setLoading] = useState(true);
   const [expandedRecurring, setExpandedRecurring] = useState<ScheduleItem[]>([]);
+  const [country, setCountry] = useState<Country>('ID');
+  const [weekendDays, setWeekendDays] = useState<number[]>(DEFAULT_WEEKEND_DAYS);
   const supabase = createClient();
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
-  const holiday = getHoliday(selectedDate);
-  const isWorking = isWorkingDay(selectedDate);
+  const holiday = getHoliday(selectedDate, country);
+  const isWorking = isWorkingDay(selectedDate, country, weekendDays);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('settings');
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        setCountry(settings.country || 'ID');
+        setWeekendDays(settings.weekendDays || DEFAULT_WEEKEND_DAYS);
+      } catch (e) {
+        console.error('Error loading settings:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     requestNotificationPermission();
@@ -227,7 +242,7 @@ export default function JadwalPage() {
               )}
               {!isWorking && !holiday && (
                 <div className="font-mono text-xs text-brutal-accent mt-2 font-bold">
-                  (HARI LIBUR AKHIR PEKAN)
+                  (WEEKEND)
                 </div>
               )}
             </div>
