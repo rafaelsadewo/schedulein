@@ -37,7 +37,7 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
   const icon = {
     success: '[OK]',
     error: '[ERR]',
-    info: '[>>]',
+    info: '[→]',
     warning: '[!]',
   };
 

@@ -511,7 +511,7 @@ export default function JadwalPage() {
           </div>
 
           {loading ? (
-            <div className="font-mono text-sm text-brutal-fg-light">[>>] LOADING...</div>
+            <div className="font-mono text-sm text-brutal-fg-light">[→] LOADING...</div>
           ) : allSchedules.length === 0 ? (
             <div className="bg-brutal-accent text-brutal-fg-light p-4 font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">[!] TIDAK ADA JADWAL</div>

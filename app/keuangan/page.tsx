@@ -371,7 +371,7 @@ export default function KeuanganPage() {
           </div>
 
           {loading ? (
-            <div className="p-6 font-mono text-sm">[>>] LOADING...</div>
+            <div className="p-6 font-mono text-sm">[→] LOADING...</div>
           ) : transactions.length === 0 ? (
             <div className="p-6 bg-brutal-accent text-brutal-fg-light font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">[!] TIDAK ADA TRANSAKSI</div>

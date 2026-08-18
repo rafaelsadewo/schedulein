@@ -61,7 +61,7 @@ export default function LoginPage() {
               </div>
             ) : (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                [>>] SIAP INPUT CREDENTIALS
+                [→] SIAP INPUT CREDENTIALS
               </div>
             )}
           </div>

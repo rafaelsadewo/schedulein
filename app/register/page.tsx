@@ -82,7 +82,7 @@ export default function RegisterPage() {
               </div>
             ) : (
               <div className="text-brutal-accent text-xs font-bold tracking-wide">
-                [>>] ISI FORM UNTUK DAFTAR
+                [→] ISI FORM UNTUK DAFTAR
               </div>
             )}
           </div>
