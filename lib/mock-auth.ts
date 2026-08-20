@@ -100,6 +100,26 @@ class MockAuthClient {
     }
     return { error: null };
   }
+
+  // Mock mode has no real email delivery - just confirm the account exists.
+  async resetPasswordForEmail(email: string): Promise<{ error: { message: string } | null }> {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (!this.users.has(email)) {
+      return { error: { message: 'No account found with that email' } };
+    }
+    return { error: null };
+  }
+
+  async updateUser(password: string): Promise<{ error: { message: string } | null }> {
+    if (typeof window === 'undefined') return { error: { message: 'Not signed in' } };
+    const session = localStorage.getItem('mock-session');
+    if (!session) return { error: { message: 'Not signed in' } };
+    const { user } = JSON.parse(session);
+    const existing = this.users.get(user.email);
+    if (!existing) return { error: { message: 'Not signed in' } };
+    this.users.set(user.email, { ...existing, password });
+    return { error: null };
+  }
 }
 
 export const mockAuthClient = new MockAuthClient();

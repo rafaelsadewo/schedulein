@@ -58,16 +58,16 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-4">
-      <div className="w-full max-w-md border-2 border-brutal-fg p-6 sm:p-8">
-        <h1 className="text-4xl font-black text-center mb-2 tracking-tighter">
-          [ SCHEDULEIN ]
+    <div className="h-screen overflow-hidden flex items-center justify-center bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-4">
+      <div className="shadow-block-lg corner-marks animate-enter w-full max-w-md border-2 border-brutal-fg p-5 sm:p-6">
+        <h1 className="text-4xl font-black text-center mb-1 tracking-tighter">
+          [ SCHEDULEIN ]<span className="text-base align-top">&reg;</span>
         </h1>
-        <p className="text-center font-mono text-xs text-brutal-fg mb-8 opacity-70">
+        <p className="text-center font-mono text-xs text-brutal-fg mb-4 opacity-70">
           CREATE NEW ACCOUNT TO BEGIN
         </p>
 
-        <div className="mb-8 border-2 border-brutal-fg p-4">
+        <div className="mb-4 border-2 border-brutal-fg p-3">
           <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-2">
             ◆ AUTHENTICATION / REGISTER
           </div>
@@ -88,7 +88,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-6">
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               EMAIL
@@ -134,16 +134,14 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
+            className="cta w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
           >
             {loading ? 'REGISTERING' : 'REGISTER'}
           </button>
         </form>
 
-        <hr className="my-8 border-0 border-t-2 border-brutal-fg" />
-
-        <div className="text-center font-mono text-xs tracking-wider">
-          <div className="mb-2 text-brutal-fg">HAVE ACCOUNT?</div>
+        <div className="flex items-center justify-center font-mono text-xs tracking-wider mt-4 pt-4 border-t-2 border-brutal-fg">
+          <span className="text-brutal-fg mr-2">HAVE ACCOUNT?</span>
           <Link href="/login" className="text-brutal-accent-deep font-bold hover:bg-brutal-accent hover:text-brutal-fg px-2">
             &gt;&gt; LOGIN &lt;&lt;
           </Link>

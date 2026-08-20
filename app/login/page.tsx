@@ -41,16 +41,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-4">
-      <div className="w-full max-w-md border-2 border-brutal-fg p-6 sm:p-8">
-        <h1 className="text-4xl font-black text-center mb-2 tracking-tighter">
-          SCHEDULEIN
+    <div className="h-screen overflow-hidden flex items-center justify-center bg-brutal-bg text-brutal-fg border-2 border-brutal-fg p-4">
+      <div className="shadow-block-lg corner-marks animate-enter w-full max-w-md border-2 border-brutal-fg p-5 sm:p-6">
+        <h1 className="text-4xl font-black text-center mb-1 tracking-tighter">
+          [ SCHEDULEIN ]<span className="text-base align-top">&reg;</span>
         </h1>
-        <p className="text-center font-mono text-xs text-brutal-fg mb-8 opacity-70">
+        <p className="text-center font-mono text-xs text-brutal-fg mb-4 opacity-70">
           PERSONAL SCHEDULE & FINANCE TRACKER
         </p>
 
-        <div className="mb-8 border-2 border-brutal-fg p-4">
+        <div className="mb-4 border-2 border-brutal-fg p-3">
           <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-2">
             ◆ AUTHENTICATION / LOGIN
           </div>
@@ -67,7 +67,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block font-mono text-xs font-bold tracking-wider mb-2 text-brutal-fg">
               EMAIL ADDRESS
@@ -99,16 +99,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
+            className="cta w-full bg-brutal-fg text-brutal-bg border-2 border-brutal-fg p-3 font-bold text-sm tracking-tight uppercase hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
           >
             {loading ? 'LOGGING IN' : 'LOGIN'}
           </button>
         </form>
 
-        <hr className="my-8 border-0 border-t-2 border-brutal-fg" />
-
-        <div className="text-center font-mono text-xs tracking-wider">
-          <div className="mb-2 text-brutal-fg">NO ACCOUNT?</div>
+        <div className="flex items-center justify-between font-mono text-xs tracking-wider mt-4 pt-4 border-t-2 border-brutal-fg">
+          <Link href="/forgot-password" className="text-brutal-fg opacity-70 hover:opacity-100 hover:text-brutal-accent-deep">
+            FORGOT PASSWORD?
+          </Link>
           <Link href="/register" className="text-brutal-accent-deep font-bold hover:bg-brutal-accent hover:text-brutal-fg px-2">
             &gt;&gt; REGISTER &lt;&lt;
           </Link>

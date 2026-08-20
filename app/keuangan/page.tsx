@@ -42,6 +42,7 @@ export default function KeuanganPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [showRangeExport, setShowRangeExport] = useState(false);
   const [rangeStart, setRangeStart] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -67,7 +68,7 @@ export default function KeuanganPage() {
   }, []);
 
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat(undefined, {
+    new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency,
       maximumFractionDigits: 0,
@@ -138,34 +139,46 @@ export default function KeuanganPage() {
     setSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .insert([
-          {
-            type,
-            category,
-            amount: parseFloat(amount),
-            description,
-            date,
-          },
-        ]);
+      const payload = {
+        type,
+        category,
+        amount: parseFloat(amount),
+        description,
+        date,
+      };
+
+      const { error } = editingId
+        ? await supabase.from('transactions').update(payload).eq('id', editingId)
+        : await supabase.from('transactions').insert([payload]);
 
       if (error) {
         console.error(error);
-        showToast('Failed to add transaction', 'error');
+        showToast(`Failed to ${editingId ? 'update' : 'add'} transaction`, 'error');
       } else {
         setType('expense');
         setCategory('Food');
         setAmount('');
         setDescription('');
         setDate(format(new Date(), 'yyyy-MM-dd'));
+        setEditingId(null);
         setShowForm(false);
         fetchTransactions();
-        showToast(`Transaction successfully added!`, 'success');
+        showToast(`Transaction successfully ${editingId ? 'updated' : 'added'}!`, 'success');
       }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEditTransaction = (item: Transaction) => {
+    setEditingId(item.id);
+    setType(item.type);
+    setCategory(item.category);
+    setAmount(String(item.amount));
+    setDescription(item.description);
+    setDate(item.date);
+    setFormError('');
+    setShowForm(true);
   };
 
   const handleDeleteTransaction = async (id: string, description: string) => {
@@ -278,11 +291,16 @@ export default function KeuanganPage() {
       <Navbar />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
-        <h1 className="text-5xl font-black mb-12 tracking-tighter">MONTHLY FINANCE</h1>
+      <main className="corner-marks animate-enter max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
+        <div className="relative mb-12">
+          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-black leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
+            02
+          </span>
+          <h1 className="text-5xl font-black tracking-tighter">MONTHLY FINANCE</h1>
+        </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 mb-12 border-2 border-brutal-fg">
+        <div className="shadow-block grid grid-cols-1 md:grid-cols-3 gap-0 mb-12 border-2 border-brutal-fg">
           <div className="border-r-2 border-b-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-2">INCOME</div>
             <div className="text-3xl font-black tracking-tighter text-brutal-accent-deep">
@@ -309,7 +327,7 @@ export default function KeuanganPage() {
 
         {/* Category Breakdown */}
         {expenseByCategory.length > 0 && (
-          <div className="mb-12 border-2 border-brutal-fg p-6">
+          <div className="mb-12 shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-6">EXPENSE / CATEGORY</div>
 
             {expenseByCategory.map((cat) => (
@@ -345,7 +363,7 @@ export default function KeuanganPage() {
         )}
 
         {/* Export Controls */}
-        <div className="mb-12 border-2 border-brutal-fg p-6">
+        <div className="mb-12 shadow-block border-2 border-brutal-fg p-6">
           <div className="font-mono text-xs tracking-wider font-bold mb-4">EXPORT / ACTIONS</div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -394,7 +412,7 @@ export default function KeuanganPage() {
           </div>
 
           {showRangeExport && (
-            <div className="mt-4 border-2 border-brutal-fg p-4">
+            <div className="animate-enter mt-4 border-2 border-brutal-fg p-4">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block font-mono text-xs font-bold tracking-wider mb-2">FROM</label>
@@ -434,7 +452,10 @@ export default function KeuanganPage() {
 
         {/* Add Transaction Button */}
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm) setEditingId(null);
+            setShowForm(!showForm);
+          }}
           className="w-full mb-12 bg-brutal-accent text-brutal-fg border-2 border-brutal-accent py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg hover:border-brutal-fg"
         >
           {showForm ? '[ CLOSE FORM ]' : '[ ADD TRANSACTION ]'}
@@ -442,8 +463,10 @@ export default function KeuanganPage() {
 
         {/* Form */}
         {showForm && (
-          <div className="mb-12 border-2 border-brutal-fg p-6">
-            <div className="font-mono text-xs tracking-wider font-bold mb-4">INPUT / NEW TRANSACTION</div>
+          <div className="animate-enter mb-12 shadow-block border-2 border-brutal-fg p-6">
+            <div className="font-mono text-xs tracking-wider font-bold mb-4">
+              {editingId ? 'EDIT / TRANSACTION' : 'INPUT / NEW TRANSACTION'}
+            </div>
 
             <form onSubmit={handleAddTransaction} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -480,7 +503,7 @@ export default function KeuanganPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">AMOUNT (Rp)</label>
+                  <label className="block font-mono text-xs font-bold tracking-wider mb-2">AMOUNT ({currency})</label>
                   <input
                     type="number"
                     value={amount}
@@ -524,13 +547,16 @@ export default function KeuanganPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
+                  className="cta bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
                 >
-                  {submitting ? 'SAVING...' : 'SAVE'}
+                  {submitting ? 'SAVING...' : editingId ? 'UPDATE' : 'SAVE'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                  }}
                   disabled={submitting}
                   className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
                 >
@@ -542,7 +568,7 @@ export default function KeuanganPage() {
         )}
 
         {/* Transactions List */}
-        <div className="border-2 border-brutal-fg">
+        <div className="shadow-block border-2 border-brutal-fg">
           <div className="border-b-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">DATA / TRANSACTIONS</div>
 
@@ -582,7 +608,7 @@ export default function KeuanganPage() {
           </div>
 
           {loading ? (
-            <div className="p-6 font-mono text-sm">◆ LOADING...</div>
+            <div className="p-6 font-mono text-sm animate-blink">◆ LOADING...</div>
           ) : transactions.length === 0 ? (
             <div className="p-6 bg-brutal-accent text-brutal-fg font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">▲ NO TRANSACTIONS FOUND</div>
@@ -597,7 +623,7 @@ export default function KeuanganPage() {
           ) : (
             <div>
               {filteredTransactions.map((item, idx) => (
-                <div key={item.id} className={`border-b-2 border-brutal-fg p-4 ${idx % 2 === 0 ? 'bg-brutal-bg' : 'bg-brutal-accent/10'}`}>
+                <div key={item.id} className={`border-b-2 border-brutal-fg p-4 ${idx % 2 === 0 ? 'bg-brutal-bg' : 'bg-[#e4f0d4]'}`}>
                   <div className="flex justify-between items-start gap-3">
                     <input
                       type="checkbox"
@@ -619,13 +645,21 @@ export default function KeuanganPage() {
                       }`}>
                         {item.type === 'income' ? '+' : '-'} {formatCurrency(item.amount)}
                       </div>
-                      <button
-                        onClick={() => handleDeleteTransaction(item.id, item.description || item.category)}
-                        disabled={deletingId === item.id}
-                        className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg mt-2 disabled:opacity-50"
-                      >
-                        {deletingId === item.id ? '...' : 'DEL'}
-                      </button>
+                      <div className="flex gap-2 mt-2 justify-end">
+                        <button
+                          onClick={() => handleEditTransaction(item)}
+                          className="bg-brutal-accent text-brutal-fg border-2 border-brutal-accent px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg"
+                        >
+                          EDIT
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTransaction(item.id, item.description || item.category)}
+                          disabled={deletingId === item.id}
+                          className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
+                        >
+                          {deletingId === item.id ? '...' : 'DEL'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

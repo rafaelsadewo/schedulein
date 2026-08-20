@@ -10,11 +10,17 @@ export interface Transaction {
 }
 
 function formatMoney(amount: number, currency: string): string {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+// Escape embedded quotes (RFC 4180) and prefix =, +, -, @ so spreadsheet apps don't run them as formulas.
+function csvSafe(cell: string): string {
+  const escaped = cell.replace(/"/g, '""');
+  return /^[=+\-@]/.test(escaped) ? `'${escaped}` : escaped;
 }
 
 /**
@@ -37,7 +43,7 @@ export function exportToCSV(
 
   const csv = [
     headers.join(','),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ...rows.map((row) => row.map((cell) => `"${csvSafe(String(cell))}"`).join(',')),
   ].join('\n');
 
   downloadFile(csv, filename, 'text/csv;charset=utf-8;');

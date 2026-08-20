@@ -33,6 +33,10 @@ drop policy if exists "schedule_items_insert_own" on schedule_items;
 create policy "schedule_items_insert_own" on schedule_items
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "schedule_items_update_own" on schedule_items;
+create policy "schedule_items_update_own" on schedule_items
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 drop policy if exists "schedule_items_delete_own" on schedule_items;
 create policy "schedule_items_delete_own" on schedule_items
   for delete using (auth.uid() = user_id);
@@ -65,6 +69,10 @@ drop policy if exists "recurring_schedules_insert_own" on recurring_schedules;
 create policy "recurring_schedules_insert_own" on recurring_schedules
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists "recurring_schedules_update_own" on recurring_schedules;
+create policy "recurring_schedules_update_own" on recurring_schedules
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 drop policy if exists "recurring_schedules_delete_own" on recurring_schedules;
 create policy "recurring_schedules_delete_own" on recurring_schedules
   for delete using (auth.uid() = user_id);
@@ -92,6 +100,10 @@ create policy "transactions_select_own" on transactions
 drop policy if exists "transactions_insert_own" on transactions;
 create policy "transactions_insert_own" on transactions
   for insert with check (auth.uid() = user_id);
+
+drop policy if exists "transactions_update_own" on transactions;
+create policy "transactions_update_own" on transactions
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 drop policy if exists "transactions_delete_own" on transactions;
 create policy "transactions_delete_own" on transactions

@@ -56,6 +56,8 @@ export default function JadwalPage() {
   const [recurringSubmitting, setRecurringSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingRecurringId, setDeletingRecurringId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingRecurringId, setEditingRecurringId] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [recurringFormError, setRecurringFormError] = useState('');
   const [expandedRecurring, setExpandedRecurring] = useState<ScheduleItem[]>([]);
@@ -262,33 +264,46 @@ export default function JadwalPage() {
     setSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('schedule_items')
-        .insert([
-          {
-            title,
-            date: dateStr,
-            start_time: startTime,
-            end_time: endTime,
-            notes: notes || null,
-          },
-        ]);
+      const payload = {
+        title,
+        date: dateStr,
+        start_time: startTime,
+        end_time: endTime,
+        notes: notes || null,
+      };
+
+      const { error } = editingId
+        ? await supabase.from('schedule_items').update(payload).eq('id', editingId)
+        : await supabase.from('schedule_items').insert([payload]);
 
       if (error) {
         console.error(error);
-        showToast('Failed to add schedule', 'error');
+        showToast(`Failed to ${editingId ? 'update' : 'add'} schedule`, 'error');
       } else {
         setTitle('');
         setStartTime('09:00');
         setEndTime('10:00');
         setNotes('');
+        setEditingId(null);
         setShowForm(false);
         fetchSchedules();
-        showToast(`Schedule "${title}" successfully added!`, 'success');
+        showToast(`Schedule "${title}" successfully ${editingId ? 'updated' : 'added'}!`, 'success');
       }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEditSchedule = (item: ScheduleItem) => {
+    setEditingId(item.id);
+    setTitle(item.title);
+    setStartTime(item.start_time);
+    setEndTime(item.end_time);
+    setNotes(item.notes || '');
+    setFormError('');
+    setTab('daily');
+    setShowForm(true);
+    setShowRecurringForm(false);
   };
 
   const handleAddRecurringSchedule = async (e: React.FormEvent) => {
@@ -306,35 +321,49 @@ export default function JadwalPage() {
     setRecurringSubmitting(true);
 
     try {
-      const { error } = await supabase
-        .from('recurring_schedules')
-        .insert([
-          {
-            title: recurringTitle,
-            start_time: recurringStartTime,
-            end_time: recurringEndTime,
-            recurrence_type: 'weekly',
-            days_of_week: selectedDaysOfWeek,
-            notes: recurringNotes || null,
-          },
-        ]);
+      const payload = {
+        title: recurringTitle,
+        start_time: recurringStartTime,
+        end_time: recurringEndTime,
+        recurrence_type: 'weekly',
+        days_of_week: selectedDaysOfWeek,
+        notes: recurringNotes || null,
+      };
+
+      const { error } = editingRecurringId
+        ? await supabase.from('recurring_schedules').update(payload).eq('id', editingRecurringId)
+        : await supabase.from('recurring_schedules').insert([payload]);
 
       if (error) {
         console.error(error);
-        showToast('Failed to add recurring schedule', 'error');
+        showToast(`Failed to ${editingRecurringId ? 'update' : 'add'} recurring schedule`, 'error');
       } else {
         setRecurringTitle('');
         setRecurringStartTime('09:00');
         setRecurringEndTime('17:00');
         setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
         setRecurringNotes('');
+        setEditingRecurringId(null);
         setShowRecurringForm(false);
         fetchRecurringSchedules();
-        showToast(`Recurring "${recurringTitle}" successfully added!`, 'success');
+        showToast(`Recurring "${recurringTitle}" successfully ${editingRecurringId ? 'updated' : 'added'}!`, 'success');
       }
     } finally {
       setRecurringSubmitting(false);
     }
+  };
+
+  const handleEditRecurring = (recurring: RecurringSchedule) => {
+    setEditingRecurringId(recurring.id);
+    setRecurringTitle(recurring.title);
+    setRecurringStartTime(recurring.start_time);
+    setRecurringEndTime(recurring.end_time);
+    setSelectedDaysOfWeek(recurring.days_of_week || []);
+    setRecurringNotes(recurring.notes || '');
+    setRecurringFormError('');
+    setTab('recurring');
+    setShowRecurringForm(true);
+    setShowForm(false);
   };
 
   const handleDeleteSchedule = async (id: string, title: string) => {
@@ -413,6 +442,7 @@ export default function JadwalPage() {
   const handleDailyTabClick = () => {
     if (tab === 'daily' && showForm) {
       setShowForm(false);
+      setEditingId(null);
     } else {
       setTab('daily');
       setShowForm(true);
@@ -423,6 +453,7 @@ export default function JadwalPage() {
   const handleRecurringTabClick = () => {
     if (tab === 'recurring' && showRecurringForm) {
       setShowRecurringForm(false);
+      setEditingRecurringId(null);
     } else {
       setTab('recurring');
       setShowRecurringForm(true);
@@ -454,11 +485,16 @@ export default function JadwalPage() {
       <Navbar />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
-        <h1 className="text-5xl font-black mb-12 tracking-tighter">SCHEDULE</h1>
+      <main className="corner-marks animate-enter max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
+        <div className="relative mb-12">
+          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-black leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
+            01
+          </span>
+          <h1 className="text-5xl font-black tracking-tighter">SCHEDULE</h1>
+        </div>
 
         {/* Date Navigation */}
-        <div className="mb-12 border-2 border-brutal-fg p-6">
+        <div className="mb-12 shadow-block border-2 border-brutal-fg p-6">
           <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
             DATE / NAVIGATION
           </div>
@@ -478,12 +514,12 @@ export default function JadwalPage() {
                     {format(selectedDate, 'EEEE, dd MMM yyyy').toUpperCase()}
                   </div>
                   {holiday && (
-                    <div className="font-mono text-xs text-brutal-red mt-2 font-bold">
+                    <div className="tag-stamp font-mono text-xs text-brutal-red mt-2 font-bold border-2 border-brutal-red px-2 py-0.5">
                       ▲ {holiday.name.toUpperCase()}
                     </div>
                   )}
                   {!isWorking && !holiday && (
-                    <div className="font-mono text-xs text-brutal-accent-deep mt-2 font-bold">
+                    <div className="tag-stamp font-mono text-xs text-brutal-accent-deep mt-2 font-bold border-2 border-brutal-accent-deep px-2 py-0.5">
                       (WEEKEND)
                     </div>
                   )}
@@ -558,9 +594,9 @@ export default function JadwalPage() {
 
         {/* Daily Form */}
         {tab === 'daily' && showForm && (
-          <div className="mb-12 border-2 border-brutal-fg p-6">
+          <div className="animate-enter mb-12 shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
-              INPUT / NEW SCHEDULE
+              {editingId ? 'EDIT / SCHEDULE' : 'INPUT / NEW SCHEDULE'}
             </div>
 
             <form onSubmit={handleAddSchedule} className="space-y-4">
@@ -617,13 +653,16 @@ export default function JadwalPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
+                  className="cta bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
                 >
-                  {submitting ? 'SAVING...' : 'SAVE'}
+                  {submitting ? 'SAVING...' : editingId ? 'UPDATE' : 'SAVE'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingId(null);
+                  }}
                   disabled={submitting}
                   className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
                 >
@@ -636,9 +675,9 @@ export default function JadwalPage() {
 
         {/* Recurring Form */}
         {tab === 'recurring' && showRecurringForm && (
-          <div className="mb-12 border-2 border-brutal-fg p-6">
+          <div className="animate-enter mb-12 shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
-              INPUT / NEW RECURRING
+              {editingRecurringId ? 'EDIT / RECURRING' : 'INPUT / NEW RECURRING'}
             </div>
 
             <form onSubmit={handleAddRecurringSchedule} className="space-y-4">
@@ -730,13 +769,16 @@ export default function JadwalPage() {
                 <button
                   type="submit"
                   disabled={recurringSubmitting}
-                  className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
+                  className="cta bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
                 >
-                  {recurringSubmitting ? 'SAVING...' : 'SAVE'}
+                  {recurringSubmitting ? 'SAVING...' : editingRecurringId ? 'UPDATE' : 'SAVE'}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowRecurringForm(false)}
+                  onClick={() => {
+                    setShowRecurringForm(false);
+                    setEditingRecurringId(null);
+                  }}
                   disabled={recurringSubmitting}
                   className="bg-brutal-red text-brutal-bg border-2 border-brutal-red py-3 font-bold uppercase tracking-tight hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
                 >
@@ -749,7 +791,7 @@ export default function JadwalPage() {
 
         {/* Recurring List */}
         {tab === 'recurring' && recurringSchedules.length > 0 && (
-          <div className="mb-12 border-2 border-brutal-fg p-6">
+          <div className="mb-12 shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-2 font-bold">
               DATA / RECURRING SCHEDULES ({recurringSchedules.length})
             </div>
@@ -759,7 +801,7 @@ export default function JadwalPage() {
 
             <div className="space-y-3">
               {recurringSchedules.map((recurring) => (
-                <div key={recurring.id} className="border-2 border-brutal-fg p-4 hover:border-brutal-accent-deep">
+                <div key={recurring.id} className="row-hover border-2 border-brutal-fg p-4 hover:border-brutal-accent-deep">
                   <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
                       <h3 className="font-black text-lg mb-2 tracking-tighter uppercase">
@@ -775,17 +817,25 @@ export default function JadwalPage() {
                         <div className="font-mono text-xs text-brutal-fg opacity-70 mt-2 italic">{recurring.notes}</div>
                       )}
                     </div>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete recurring schedule "${recurring.title}"?`)) {
-                          handleDeleteRecurring(recurring.id, recurring.title);
-                        }
-                      }}
-                      disabled={deletingRecurringId === recurring.id}
-                      className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg whitespace-nowrap disabled:opacity-50"
-                    >
-                      {deletingRecurringId === recurring.id ? '...' : 'DELETE'}
-                    </button>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleEditRecurring(recurring)}
+                        className="bg-brutal-accent text-brutal-fg border-2 border-brutal-accent px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg whitespace-nowrap"
+                      >
+                        EDIT
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete recurring schedule "${recurring.title}"?`)) {
+                            handleDeleteRecurring(recurring.id, recurring.title);
+                          }
+                        }}
+                        disabled={deletingRecurringId === recurring.id}
+                        className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-4 py-2 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg whitespace-nowrap disabled:opacity-50"
+                      >
+                        {deletingRecurringId === recurring.id ? '...' : 'DELETE'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -795,7 +845,7 @@ export default function JadwalPage() {
 
         {/* Schedule List */}
         {viewMode === 'day' && (
-        <div className="border-2 border-brutal-fg p-6">
+        <div className="shadow-block border-2 border-brutal-fg p-6">
           <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-4 font-bold">
             DATA / SCHEDULE ({filteredSchedules.length}{searchQuery ? ` OF ${allSchedules.length}` : ''})
           </div>
@@ -826,7 +876,7 @@ export default function JadwalPage() {
           )}
 
           {loading ? (
-            <div className="font-mono text-sm text-brutal-fg">◆ LOADING...</div>
+            <div className="font-mono text-sm text-brutal-fg animate-blink">◆ LOADING...</div>
           ) : allSchedules.length === 0 ? (
             <div className="bg-brutal-accent text-brutal-fg p-4 font-mono text-xs leading-relaxed">
               <div className="font-bold mb-2">▲ NO SCHEDULE FOUND</div>
@@ -841,7 +891,7 @@ export default function JadwalPage() {
           ) : (
             <div className="space-y-3">
               {filteredSchedules.map((item) => (
-                <div key={item.id} className="border-2 border-brutal-fg p-4 hover:border-brutal-accent-deep transition-colors">
+                <div key={item.id} className="row-hover border-2 border-brutal-fg p-4 hover:border-brutal-accent-deep transition-colors">
                   <div className="flex justify-between items-start gap-3">
                     {!item.id.includes('recurring') && (
                       <input
@@ -861,13 +911,21 @@ export default function JadwalPage() {
                       )}
                     </div>
                     {!item.id.includes('recurring') && (
-                      <button
-                        onClick={() => handleDeleteSchedule(item.id, item.title)}
-                        disabled={deletingId === item.id}
-                        className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg ml-4 disabled:opacity-50"
-                      >
-                        {deletingId === item.id ? '...' : 'DEL'}
-                      </button>
+                      <div className="flex gap-2 ml-4 shrink-0">
+                        <button
+                          onClick={() => handleEditSchedule(item)}
+                          className="bg-brutal-accent text-brutal-fg border-2 border-brutal-accent px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg"
+                        >
+                          EDIT
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSchedule(item.id, item.title)}
+                          disabled={deletingId === item.id}
+                          className="bg-brutal-red text-brutal-bg border-2 border-brutal-red px-3 py-1 font-bold text-xs tracking-tight uppercase hover:bg-brutal-fg hover:text-brutal-bg disabled:opacity-50"
+                        >
+                          {deletingId === item.id ? '...' : 'DEL'}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -879,13 +937,13 @@ export default function JadwalPage() {
 
         {/* Week Grid */}
         {viewMode === 'week' && (
-          <div className="border-2 border-brutal-fg p-6">
+          <div className="shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider text-brutal-fg uppercase mb-6 font-bold">
               DATA / WEEK
             </div>
 
             {weekLoading ? (
-              <div className="font-mono text-sm text-brutal-fg">◆ LOADING...</div>
+              <div className="font-mono text-sm text-brutal-fg animate-blink">◆ LOADING...</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-7 gap-0 border-2 border-brutal-fg">
                 {weekDays.map((day, idx) => {
@@ -898,7 +956,7 @@ export default function JadwalPage() {
                     <div
                       key={idx}
                       className={`border-brutal-fg p-3 md:border-r-2 border-b-2 md:border-b-0 last:border-r-0 ${
-                        isToday ? 'bg-brutal-accent/20' : ''
+                        isToday ? 'bg-[#deecce]' : ''
                       }`}
                     >
                       <button
@@ -915,7 +973,7 @@ export default function JadwalPage() {
                           {format(day, 'dd')}
                         </div>
                         {dayHoliday && (
-                          <div className="font-mono text-[10px] text-brutal-red font-bold mt-1">▲ HOLIDAY</div>
+                          <div className="tag-stamp font-mono text-[10px] text-brutal-red font-bold mt-1">▲ HOLIDAY</div>
                         )}
                         {!dayWorking && !dayHoliday && (
                           <div className="font-mono text-[10px] text-brutal-accent-deep font-bold mt-1">WEEKEND</div>

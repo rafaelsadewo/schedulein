@@ -1,11 +1,13 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-export async function middleware(request: NextRequest) {
+const PUBLIC_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Bypass middleware for public routes
-  if (pathname === '/login' || pathname === '/register') {
+  // Bypass proxy for public routes
+  if (PUBLIC_ROUTES.includes(pathname)) {
     return NextResponse.next();
   }
 

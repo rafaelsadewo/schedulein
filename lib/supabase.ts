@@ -21,7 +21,7 @@ class MockQueryBuilder implements PromiseLike<{ data: Row[]; error: null }> {
   private orderField: string | null = null;
   private orderAsc = true;
 
-  constructor(private table: string, private mode: 'select' | 'delete') {}
+  constructor(private table: string, private mode: 'select' | 'delete' | 'update', private updateData?: Row) {}
 
   eq(field: string, value: any) {
     this.filters.push((row) => row[field] === value);
@@ -56,6 +56,12 @@ class MockQueryBuilder implements PromiseLike<{ data: Row[]; error: null }> {
     if (this.mode === 'delete') {
       writeTable(this.table, rows.filter((r) => !matches(r)));
       return { data: rows.filter(matches), error: null };
+    }
+
+    if (this.mode === 'update') {
+      const updated = rows.map((r) => (matches(r) ? { ...r, ...this.updateData } : r));
+      writeTable(this.table, updated);
+      return { data: updated.filter(matches), error: null };
     }
 
     let result = rows.filter(matches);
@@ -93,6 +99,12 @@ class MockSupabaseClient {
     signOut: async () => {
       return mockAuthClient.signOut();
     },
+    resetPasswordForEmail: async (email: string) => {
+      return mockAuthClient.resetPasswordForEmail(email);
+    },
+    updateUser: async ({ password }: { password: string }) => {
+      return mockAuthClient.updateUser(password);
+    },
   };
 
   from(table: string) {
@@ -108,6 +120,7 @@ class MockSupabaseClient {
         writeTable(table, [...rows, ...inserted]);
         return { data: inserted, error: null };
       },
+      update: (data: Row) => new MockQueryBuilder(table, 'update', data),
       delete: () => new MockQueryBuilder(table, 'delete'),
     };
   }

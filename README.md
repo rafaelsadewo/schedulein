@@ -4,8 +4,9 @@ Personal schedule and finance tracker. Daily and recurring schedules with Indone
 
 ## Features
 
-- **Schedule**: daily entries, recurring weekly patterns (pick days directly), day/week views, search, bulk delete, holiday-aware (country + configurable weekend days)
-- **Finance**: income/expense tracking by category, overspending alerts, CSV/TXT export (this month, custom date range), auto-export at month start
+- **Schedule**: daily entries, recurring weekly patterns (pick days directly), day/week views, search, bulk delete, edit in place, holiday-aware (country + configurable weekend days)
+- **Finance**: income/expense tracking by category, edit in place, overspending alerts, CSV/TXT export (this month, custom date range), auto-export at month start
+- **Auth**: register/login, forgot-password email flow
 - **Notifications**: browser reminders before each schedule item, optional email reminders (requires a Resend API key)
 - **Settings**: timezone, currency, country/holiday calendar, weekend days, notification preferences
 - **Design**: brutalist UI — sharp corners, monospace metadata, a 4-tone green palette
@@ -53,7 +54,7 @@ schedulein/
 │   ├── notifications.ts
 │   └── export.ts
 ├── supabase/schema.sql    # Tables + RLS policies for a real deployment
-├── middleware.ts          # Auth gate
+├── proxy.ts               # Auth gate (Next.js proxy, formerly middleware.ts)
 └── SETUP.md               # Full deployment guide
 ```
 

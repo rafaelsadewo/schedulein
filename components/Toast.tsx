@@ -43,7 +43,7 @@ export function Toast({ message, type, duration = 3000, onClose }: ToastProps) {
 
   return (
     <div
-      className={`fixed top-4 right-4 border-2 ${bgColor[type]} px-6 py-4 font-mono text-xs font-bold tracking-wide z-50`}
+      className={`shadow-block animate-slide-in border-2 ${bgColor[type]} px-6 py-4 font-mono text-xs font-bold tracking-wide`}
     >
       <div className="flex items-center gap-3">
         <span className="text-lg leading-none">{icon[type]}</span>

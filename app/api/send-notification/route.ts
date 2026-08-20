@@ -16,6 +16,12 @@ export async function POST(request: Request) {
   if (!email || !subject || !message) {
     return NextResponse.json({ error: 'Missing email, subject, or message' }, { status: 400 });
   }
+  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+  }
+  if (typeof subject !== 'string' || subject.length > 200 || typeof message !== 'string' || message.length > 2000) {
+    return NextResponse.json({ error: 'Subject or message too long' }, { status: 400 });
+  }
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',

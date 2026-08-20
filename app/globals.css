@@ -10,6 +10,8 @@
   --red: #E61919;
   --border: 1px solid var(--fg);
   --border-thick: 2px solid var(--fg);
+  --shadow-sm: 4px 4px 0 var(--fg);
+  --shadow-lg: 8px 8px 0 var(--fg);
 }
 
 * {
@@ -66,13 +68,17 @@ input, select, textarea {
   letter-spacing: -0.02em;
 }
 
+input, select, textarea {
+  transition: border-color 100ms linear, box-shadow 100ms linear;
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border: var(--border-thick);
   box-shadow: inset 2px 2px 0 var(--fg);
 }
 
-/* Button styling - brutal */
+/* Button styling - brutal, with a hard offset shadow that collapses on press */
 button {
   background: var(--fg);
   color: var(--bg);
@@ -84,16 +90,127 @@ button {
   letter-spacing: -0.02em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: none;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 100ms linear, color 100ms linear, box-shadow 80ms linear, transform 80ms linear;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background: var(--accent);
   color: var(--fg);
+  letter-spacing: 0em;
 }
 
-button:active {
-  box-shadow: inset 0 0 0 2px var(--fg);
+button:active:not(:disabled) {
+  box-shadow: 0 0 0 var(--fg);
+  transform: translate(4px, 4px);
+}
+
+button:disabled {
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Mechanical "engage" arrow - snaps in on hover, not a smooth fade */
+button::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  vertical-align: middle;
+  transition: width 100ms linear, margin-left 100ms linear;
+}
+
+button:hover:not(:disabled)::after {
+  content: '\25B8';
+  width: 0.7em;
+  margin-left: 0.4em;
+}
+
+/* Static hard-offset shadow for section cards (non-interactive, no press collapse) */
+.shadow-block {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-block-lg {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Rotated badge - hand-stamped feel for status tags */
+.tag-stamp {
+  display: inline-block;
+  transform: rotate(-2deg);
+}
+
+/* Small lift on hover for list rows */
+.row-hover {
+  transition: box-shadow 100ms linear, border-color 100ms linear, transform 100ms linear;
+}
+
+.row-hover:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translate(-2px, -2px);
+}
+
+/* CTA marker - primary action buttons get a corner tick on hover */
+.cta {
+  position: relative;
+}
+
+.cta::before {
+  content: '+';
+  position: absolute;
+  top: 0.3rem;
+  left: 0.45rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 100ms linear;
+  pointer-events: none;
+}
+
+.cta:hover:not(:disabled)::before {
+  opacity: 0.5;
+}
+
+/* Full-screen animated nav overlay */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--fg);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 200ms linear, visibility 0ms linear 200ms;
+}
+
+.nav-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 200ms linear, visibility 0ms linear 0ms;
+}
+
+.nav-overlay-item {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 200ms linear, transform 200ms linear;
+}
+
+.nav-overlay.open .nav-overlay-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-overlay, .nav-overlay-item {
+    transition: none;
+  }
 }
 
 /* Grid compartmentalization */
@@ -141,11 +258,27 @@ a {
   color: var(--fg);
   text-decoration: underline;
   font-weight: 700;
+  transition: background-color 100ms linear, color 100ms linear;
 }
 
 a:hover {
   background: var(--accent);
   color: var(--fg);
+}
+
+a::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  vertical-align: middle;
+  transition: width 100ms linear, margin-left 100ms linear;
+}
+
+a:hover::after {
+  content: '\25B8';
+  width: 0.7em;
+  margin-left: 0.3em;
 }
 
 /* ASCII frame */
@@ -175,4 +308,135 @@ a:hover {
   border-bottom: var(--border);
   padding: 1rem;
   background: #FFF5F5;
+}
+
+/* Animation - fast, mechanical, no easing curves or bounce */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-enter {
+  animation: enter 180ms linear;
+}
+
+.animate-slide-in {
+  animation: slide-in-right 150ms linear;
+}
+
+.animate-blink {
+  animation: blink 1s step-start infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter, .animate-slide-in, .animate-blink {
+    animation: none;
+  }
+}
+
+/* Physical grain - printed substrate texture over the entire viewport */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Corner crosshair marks - grid intersection markers */
+.corner-marks {
+  position: relative;
+}
+
+.corner-marks::before,
+.corner-marks::after {
+  content: '+';
+  position: absolute;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--fg);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.corner-marks::before {
+  top: -0.55rem;
+  left: -0.55rem;
+}
+
+.corner-marks::after {
+  bottom: -0.55rem;
+  right: -0.55rem;
+}
+
+/* Ticker - scrolling telemetry strip */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ticker {
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--fg);
+}
+
+.ticker-track {
+  display: inline-flex;
+  animation: marquee 26s linear infinite;
+  will-change: transform;
+}
+
+.ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--bg);
+  padding: 0.4rem 0;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
 }

@@ -98,12 +98,17 @@ export default function SettingsPage() {
       <Navbar />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
-        <h1 className="text-5xl font-black mb-12 tracking-tighter">SETTINGS</h1>
+      <main className="corner-marks animate-enter max-w-4xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
+        <div className="relative mb-12">
+          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-black leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
+            03
+          </span>
+          <h1 className="text-5xl font-black tracking-tighter">SETTINGS</h1>
+        </div>
 
         <form onSubmit={handleSaveSettings} className="space-y-8">
           {/* Timezone Section */}
-          <div className="border-2 border-brutal-fg p-6">
+          <div className="shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">TIME / TIMEZONE</div>
 
             <div>
@@ -128,7 +133,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Region Section */}
-          <div className="border-2 border-brutal-fg p-6">
+          <div className="shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">REGION / HOLIDAYS</div>
 
             <div className="mb-6">
@@ -178,7 +183,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Currency Section */}
-          <div className="border-2 border-brutal-fg p-6">
+          <div className="shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">MONEY / CURRENCY</div>
 
             <div>
@@ -203,7 +208,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Notifications Section */}
-          <div className="border-2 border-brutal-fg p-6">
+          <div className="shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">NOTIFICATIONS / REMINDERS</div>
 
             <div className="space-y-4">
@@ -222,7 +227,7 @@ export default function SettingsPage() {
               </div>
 
               {notificationsEnabled && (
-                <div>
+                <div className="animate-enter">
                   <label className="block font-mono text-xs font-bold tracking-wider mb-2">
                     NOTIFY BEFORE SCHEDULE (MINUTES)
                   </label>
@@ -258,7 +263,7 @@ export default function SettingsPage() {
               </div>
 
               {emailNotificationsEnabled && (
-                <div>
+                <div className="animate-enter">
                   <label className="block font-mono text-xs font-bold tracking-wider mb-2">
                     REMINDER EMAIL ADDRESS
                   </label>
@@ -275,7 +280,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Export Section */}
-          <div className="border-2 border-brutal-fg p-6">
+          <div className="shadow-block border-2 border-brutal-fg p-6">
             <div className="font-mono text-xs tracking-wider font-bold mb-4">EXPORT / REPORTS</div>
 
             <div>
@@ -301,7 +306,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
+              className="cta flex-1 bg-brutal-fg text-brutal-bg border-2 border-brutal-fg py-3 font-bold uppercase tracking-tight hover:bg-brutal-accent hover:text-brutal-fg hover:border-brutal-accent disabled:opacity-50"
             >
               {loading ? 'SAVING...' : 'SAVE SETTINGS'}
             </button>
