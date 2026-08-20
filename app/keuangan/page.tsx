@@ -53,10 +53,12 @@ export default function KeuanganPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [currency, setCurrency] = useState('IDR');
+  const [lastMonthTransactions, setLastMonthTransactions] = useState<Transaction[]>([]);
   const supabase = createClient();
 
   useEffect(() => {
     fetchTransactions();
+    fetchLastMonthTransactions();
     checkAutoExport();
 
     try {
@@ -128,6 +130,21 @@ export default function KeuanganPage() {
     }
   };
 
+  const fetchLastMonthTransactions = async () => {
+    const now = new Date();
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthKey = format(lastMonthDate, 'yyyy-MM');
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .gte('date', `${lastMonthKey}-01`)
+      .lte('date', `${lastMonthKey}-31`);
+
+    if (error) console.error(error);
+    else setLastMonthTransactions(data || []);
+  };
+
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -179,6 +196,7 @@ export default function KeuanganPage() {
     setDate(item.date);
     setFormError('');
     setShowForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteTransaction = async (id: string, description: string) => {
@@ -274,6 +292,60 @@ export default function KeuanganPage() {
     ? expenseByCategory.reduce((max, c) => (c.total > max.total ? c : max))
     : null;
 
+  // Smart spending insights - month-over-month comparison, no external AI involved.
+  const insights: { type: 'warning' | 'info'; message: string }[] = [];
+
+  const lastMonthExpenseByCategory: Record<string, number> = {};
+  lastMonthTransactions
+    .filter((t) => t.type === 'expense')
+    .forEach((t) => {
+      lastMonthExpenseByCategory[t.category] = (lastMonthExpenseByCategory[t.category] || 0) + t.amount;
+    });
+  const lastMonthTotalExpense = Object.values(lastMonthExpenseByCategory).reduce((s, v) => s + v, 0);
+
+  if (mostExpensiveCategory && totalExpense > 0) {
+    const pct = (mostExpensiveCategory.total / totalExpense) * 100;
+    if (pct > 40) {
+      insights.push({
+        type: 'warning',
+        message: `${mostExpensiveCategory.name.toUpperCase()} IS ${pct.toFixed(1)}% OF TOTAL SPENDING. CONSIDER CUTTING BACK.`,
+      });
+    }
+  }
+
+  expenseByCategory.forEach((cat) => {
+    const lastAmount = lastMonthExpenseByCategory[cat.name] || 0;
+    if (lastAmount > 0 && cat.total > lastAmount * 1.3) {
+      const pct = Math.round(((cat.total - lastAmount) / lastAmount) * 100);
+      insights.push({
+        type: 'warning',
+        message: `${cat.name.toUpperCase()} SPENDING IS UP ${pct}% FROM LAST MONTH.`,
+      });
+    }
+  });
+
+  if (lastMonthTotalExpense > 0 && totalExpense > lastMonthTotalExpense * 1.2) {
+    const pct = Math.round(((totalExpense - lastMonthTotalExpense) / lastMonthTotalExpense) * 100);
+    insights.push({
+      type: 'info',
+      message: `TOTAL SPENDING THIS MONTH IS UP ${pct}% COMPARED TO LAST MONTH.`,
+    });
+  }
+
+  if (totalIncome > 0 && totalExpense > totalIncome) {
+    insights.push({ type: 'warning', message: 'EXPENSES HAVE EXCEEDED INCOME THIS MONTH.' });
+  } else if (totalIncome > 0) {
+    const savingsRate = ((totalIncome - totalExpense) / totalIncome) * 100;
+    if (savingsRate < 10) {
+      insights.push({
+        type: 'info',
+        message: `YOU'RE SAVING ONLY ${savingsRate.toFixed(0)}% OF INCOME THIS MONTH.`,
+      });
+    }
+  }
+
+  const topInsights = [...insights.filter((i) => i.type === 'warning'), ...insights.filter((i) => i.type === 'info')].slice(0, 3);
+
   const categories = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   const filteredTransactions = transactions.filter((t) => {
@@ -293,7 +365,7 @@ export default function KeuanganPage() {
 
       <main className="corner-marks animate-enter max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
         <div className="relative mb-12">
-          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-black leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
+          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-display font-normal leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
             02
           </span>
           <h1 className="text-5xl font-black tracking-tighter">MONTHLY FINANCE</h1>
@@ -350,13 +422,25 @@ export default function KeuanganPage() {
               </div>
             ))}
 
-            {mostExpensiveCategory && totalExpense > 0 && (
-              <div className="mt-8 border-l-4 border-brutal-red bg-brutal-bg border-2 border-brutal-fg p-4">
-                <div className="font-mono text-xs tracking-wider font-bold mb-2 text-brutal-red">ALERT / SPENDING</div>
-                <div className="font-mono text-xs leading-relaxed">
-                  {mostExpensiveCategory.name.toUpperCase()} IS {((mostExpensiveCategory.total / totalExpense) * 100).toFixed(1)}% OF TOTAL SPENDING.
-                  RECOMMEND REDUCTION.
-                </div>
+            {topInsights.length > 0 && (
+              <div className="mt-8 space-y-3">
+                {topInsights.map((insight, i) => (
+                  <div
+                    key={i}
+                    className={`border-l-4 ${
+                      insight.type === 'warning' ? 'border-brutal-red' : 'border-brutal-accent-deep'
+                    } bg-brutal-bg border-2 border-brutal-fg p-4`}
+                  >
+                    <div
+                      className={`font-mono text-xs tracking-wider font-bold mb-2 ${
+                        insight.type === 'warning' ? 'text-brutal-red' : 'text-brutal-accent-deep'
+                      }`}
+                    >
+                      {insight.type === 'warning' ? '▲ ALERT / SPENDING' : '◆ INSIGHT / SPENDING'}
+                    </div>
+                    <div className="font-mono text-xs leading-relaxed">{insight.message}</div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

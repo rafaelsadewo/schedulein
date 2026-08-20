@@ -19,8 +19,9 @@ const config: Config = {
         },
       },
       fontFamily: {
-        'mono': ['JetBrains Mono', 'IBM Plex Mono', 'monospace'],
-        'sans': ['Inter', 'sans-serif'],
+        'mono': ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
+        'sans': ['var(--font-sans)', 'Inter', 'sans-serif'],
+        'display': ['var(--font-display)', 'Archivo Black', 'sans-serif'],
       },
       letterSpacing: {
         'tighter': '-0.03em',

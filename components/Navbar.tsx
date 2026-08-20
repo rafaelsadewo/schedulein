@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -26,6 +26,9 @@ export default function Navbar() {
   const supabase = createClient();
   const [now, setNow] = useState<Date | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const signOutButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setNow(new Date());
@@ -35,8 +38,29 @@ export default function Navbar() {
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
+
+    if (menuOpen) {
+      closeButtonRef.current?.focus();
+    } else {
+      menuButtonRef.current?.focus();
+    }
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (!menuOpen) return;
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        return;
+      }
+      // Keep Tab focus cycling inside the overlay while it's open
+      if (e.key === 'Tab') {
+        if (e.shiftKey && document.activeElement === closeButtonRef.current) {
+          e.preventDefault();
+          signOutButtonRef.current?.focus();
+        } else if (!e.shiftKey && document.activeElement === signOutButtonRef.current) {
+          e.preventDefault();
+          closeButtonRef.current?.focus();
+        }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => {
@@ -71,6 +95,7 @@ export default function Navbar() {
           </output>
 
           <button
+            ref={menuButtonRef}
             onClick={() => setMenuOpen(true)}
             aria-expanded={menuOpen}
             className="bg-brutal-fg text-brutal-bg border-2 border-brutal-fg font-mono text-xs sm:text-sm font-bold tracking-wider px-3 sm:px-4 py-1.5 hover:bg-brutal-accent hover:text-brutal-fg"
@@ -99,7 +124,9 @@ export default function Navbar() {
         aria-hidden={!menuOpen}
       >
         <button
+          ref={closeButtonRef}
           onClick={() => setMenuOpen(false)}
+          tabIndex={menuOpen ? 0 : -1}
           className="absolute top-4 right-4 sm:top-8 sm:right-8 bg-transparent border-2 border-brutal-bg text-brutal-bg font-mono text-xs sm:text-sm font-bold tracking-wider px-3 sm:px-4 py-1.5 hover:bg-brutal-bg hover:text-brutal-fg"
         >
           [ CLOSE ]
@@ -112,6 +139,7 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
+                tabIndex={menuOpen ? 0 : -1}
                 className="nav-overlay-item group flex items-baseline gap-4 sm:gap-8 border-b-2 py-3 sm:py-5 no-underline"
                 style={{
                   transitionDelay: menuOpen ? `${i * 60}ms` : '0ms',
@@ -123,7 +151,7 @@ export default function Navbar() {
                   0{i + 1}
                 </span>
                 <span
-                  className={`font-black uppercase tracking-tighter leading-none text-[2.75rem] sm:text-[5.5rem] group-hover:opacity-60 ${
+                  className={`font-display font-normal uppercase tracking-tighter leading-none text-[2.75rem] sm:text-[5.5rem] group-hover:opacity-60 ${
                     active ? 'underline decoration-4 underline-offset-8' : ''
                   }`}
                 >
@@ -134,7 +162,9 @@ export default function Navbar() {
           })}
 
           <button
+            ref={signOutButtonRef}
             onClick={handleLogout}
+            tabIndex={menuOpen ? 0 : -1}
             className="nav-overlay-item group flex items-baseline gap-4 sm:gap-8 border-b-2 py-3 sm:py-5 w-full text-left"
             style={{
               transitionDelay: menuOpen ? `${NAV_ITEMS.length * 60}ms` : '0ms',
@@ -146,7 +176,7 @@ export default function Navbar() {
             <span className="font-mono text-sm sm:text-lg opacity-50 shrink-0">
               0{NAV_ITEMS.length + 1}
             </span>
-            <span className="font-black uppercase tracking-tighter leading-none text-[2.75rem] sm:text-[5.5rem] group-hover:opacity-60">
+            <span className="font-display font-normal uppercase tracking-tighter leading-none text-[2.75rem] sm:text-[5.5rem] group-hover:opacity-60">
               SIGN OUT
             </span>
           </button>

@@ -304,6 +304,7 @@ export default function JadwalPage() {
     setTab('daily');
     setShowForm(true);
     setShowRecurringForm(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleAddRecurringSchedule = async (e: React.FormEvent) => {
@@ -364,6 +365,7 @@ export default function JadwalPage() {
     setTab('recurring');
     setShowRecurringForm(true);
     setShowForm(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteSchedule = async (id: string, title: string) => {
@@ -444,9 +446,16 @@ export default function JadwalPage() {
       setShowForm(false);
       setEditingId(null);
     } else {
+      setEditingId(null);
+      setTitle('');
+      setStartTime('09:00');
+      setEndTime('10:00');
+      setNotes('');
+      setFormError('');
       setTab('daily');
       setShowForm(true);
       setShowRecurringForm(false);
+      setEditingRecurringId(null);
     }
   };
 
@@ -455,9 +464,17 @@ export default function JadwalPage() {
       setShowRecurringForm(false);
       setEditingRecurringId(null);
     } else {
+      setEditingRecurringId(null);
+      setRecurringTitle('');
+      setRecurringStartTime('09:00');
+      setRecurringEndTime('17:00');
+      setSelectedDaysOfWeek([1, 2, 3, 4, 5]);
+      setRecurringNotes('');
+      setRecurringFormError('');
       setTab('recurring');
       setShowRecurringForm(true);
       setShowForm(false);
+      setEditingId(null);
     }
   };
 
@@ -487,7 +504,7 @@ export default function JadwalPage() {
 
       <main className="corner-marks animate-enter max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12 border-l-2 border-r-2 border-brutal-fg">
         <div className="relative mb-12">
-          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-black leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
+          <span aria-hidden className="pointer-events-none select-none absolute -top-4 sm:-top-8 left-0 -z-10 font-display font-normal leading-none text-brutal-fg opacity-[0.06] text-[6rem] sm:text-[9rem] tracking-tighter">
             01
           </span>
           <h1 className="text-5xl font-black tracking-tighter">SCHEDULE</h1>
